@@ -1,6 +1,10 @@
-import {Column, Entity, OneToMany, PrimaryGeneratedColumn} from "typeorm";
+import {Column, Entity, JoinTable, ManyToMany, OneToMany, OneToOne} from "typeorm";
 import {UserImage} from "./UserImage";
 import {BaseModel} from "./BaseModel";
+import {Address} from "./Address";
+import {Certification} from "./Certification";
+import {Role} from "./Role";
+import {Review} from "./Review";
 
 @Entity()
 export class User extends BaseModel {
@@ -14,7 +18,12 @@ export class User extends BaseModel {
         this.birthday = null;
         this.fee = 0;
         this.bankAccountNumber = '';
-        this.photos = [];
+        this.photos = null;
+        this.address = null;
+        this.certifications = null;
+        this.roles = null;
+        this.reviewsReceived = null;
+        this.reviewsGiven = null;
     }
 
     @Column("varchar", {length: 50})
@@ -41,6 +50,22 @@ export class User extends BaseModel {
     @Column({type: "varchar", length: 34, nullable: true, unique: true})
     bankAccountNumber: string
 
-    @OneToMany(() => UserImage, (userImage: UserImage) => userImage.user, { onDelete: "CASCADE" })
-    photos: UserImage[]
+    @OneToMany(() => UserImage, (userImage: UserImage) => userImage.user, {nullable: true, onDelete: "CASCADE"})
+    photos: UserImage[] | null
+
+    @OneToOne(() => Address, (address: Address) => address.user, {nullable: true, onDelete: "CASCADE"})
+    address: Address | null
+
+    @OneToMany(() => Certification, (certification: Certification) => certification.user, {nullable: true, onDelete: "CASCADE"})
+    certifications: Certification[] | null
+
+    @ManyToMany(() => Role, (role: Role) => role.users)
+    @JoinTable({name: "userRoles"})
+    roles: Role[] | null;
+
+    @OneToMany(() => Review, (review: Review) => review.reviewed, {nullable: true, onDelete: "CASCADE"})
+    reviewsReceived: Review[] | null
+
+    @OneToMany(() => Review, (review: Review) => review.reviewer, {nullable: true, onDelete: "CASCADE"})
+    reviewsGiven: Review[] | null
 }

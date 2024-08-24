@@ -19,6 +19,7 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
+    "class-validator": "^0.14.1",
     "express": "^4.19.2",
     "mysql2": "^3.11.0",
     "reflect-metadata": "^0.2.2",
