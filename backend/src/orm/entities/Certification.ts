@@ -1,8 +1,8 @@
-
+import {Column, Entity, JoinColumn, ManyToOne} from "typeorm";
 import {BaseModel} from "./BaseModel";
-import {Column, ManyToOne} from "typeorm";
 import {User} from "./User";
 
+@Entity()
 export class Certification extends BaseModel {
     constructor() {
         super();
@@ -12,15 +12,30 @@ export class Certification extends BaseModel {
         this.user = null;
     }
 
-    @Column({type: "varchar", length: 255})
+    @Column({
+        type: "varchar",
+        length: 255
+    })
     title: string
 
-    @Column({type: Date})
+    @Column({
+        name: "issue_date",
+        type: Date
+    })
     issueDate: Date | null
 
-    @Column({type: "varchar", length: 255})
+    @Column({
+        type: "varchar",
+        length: 255
+    })
     organization: string
 
-    @ManyToOne(() => User, (user: User) => user.certifications)
+    @ManyToOne(
+        () => User,
+        (user: User) => user.certifications
+    )
+    @JoinColumn({
+        name: "user_id"
+    })
     user: User | null
 }

@@ -1,7 +1,8 @@
-import {Column, JoinColumn, OneToOne} from "typeorm";
+import {Column, Entity, JoinColumn, OneToOne} from "typeorm";
 import {BaseModel} from "./BaseModel";
 import {User} from "./User";
 
+@Entity()
 export class Address extends BaseModel {
     constructor() {
         super();
@@ -15,28 +16,57 @@ export class Address extends BaseModel {
         this.user = null
     }
 
-    @Column({type: "int", nullable: true})
+    @Column({
+        name: "building_number",
+        type: "int",
+        nullable: true
+    })
     buildingNum: number | null
 
-    @Column({type: "varchar", length: 255})
+    @Column({
+        type: "varchar",
+        length: 255
+    })
     street: string
 
-    @Column({type: "int", nullable: true})
+    @Column({
+        name: "apartment_number",
+        type: "int",
+        nullable: true
+    })
     apartmentNum: number | null
 
-    @Column({type: "int", nullable: true})
+    @Column({
+        type: "int",
+        nullable: true
+    })
     floor: number | null
 
-    @Column({type: "varchar", length: 200})
+    @Column({
+        type: "varchar",
+        length: 200
+    })
     city: string
 
-    @Column({type: "varchar", length: 100})
+    @Column({
+        type: "varchar",
+        length: 100
+    })
     country: string
 
-    @Column({type: "varchar", length: 20})
+    @Column({
+        name: "postal_code",
+        type: "varchar",
+        length: 20
+    })
     postalCode: string
 
-    @OneToOne(() => User, (user: User) => user.address)
-    @JoinColumn()
+    @OneToOne(
+        () => User,
+        (user: User) => user.address
+    )
+    @JoinColumn({
+        name: "user_id"
+    })
     user: User | null
 }

@@ -1,14 +1,15 @@
-
-import {BaseModel} from "./BaseModel";
-import {Column, JoinTable, ManyToMany} from "typeorm";
+import {Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn} from "typeorm";
 import {User} from "./User";
 
-export class Role extends BaseModel {
+@Entity()
+export class Role {
     constructor() {
-        super();
         this.role = "Pet Owner";
         this.users = null;
     }
+
+    @PrimaryGeneratedColumn("uuid")
+    id!: string
 
     @Column({
         type: "enum", default: "Pet Owner",
@@ -16,7 +17,12 @@ export class Role extends BaseModel {
     })
     role: string
 
-    @ManyToMany(() => User, (user: User) => user.roles)
-    @JoinTable({name: "userRoles"})
+    @ManyToMany(
+        () => User,
+        (user: User) => user.roles
+    )
+    @JoinTable({
+        name: "user_role"
+    })
     users: User[] | null;
 }

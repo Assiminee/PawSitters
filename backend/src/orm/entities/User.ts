@@ -15,6 +15,11 @@ import {
     MinLength
 } from "class-validator";
 
+export enum Gender {
+    FEMALE = "Female",
+    MALE = "Male"
+}
+
 @Entity()
 export class User extends BaseModel {
     constructor() {
@@ -36,63 +41,122 @@ export class User extends BaseModel {
         this.fee = 0;
     }
 
-    @Column("varchar", {length: 50})
+    @Column({
+        name: "f_name",
+        type: "varchar",
+        length: 50
+    })
     @IsNotEmpty()
     fname: string
 
-    @Column("varchar", {length: 50})
+    @Column({
+        name: "l_name",
+        type: "varchar",
+        length: 50
+    })
     @IsNotEmpty()
     lname: string
 
-    @Column({type: "varchar", length: 255, unique: true})
+    @Column({
+        type: "varchar",
+        length: 255,
+        unique: true
+    })
     @IsNotEmpty()
     @IsEmail()
     email: string
 
-    @Column({type: "varchar", length: 20, unique: true, nullable: true})
+    @Column({
+        type: "varchar",
+        length: 20,
+        unique: true,
+        nullable: true
+    })
     @IsOptional()
     @IsPhoneNumber()
     phone: string
 
-    @Column({type: "varchar", length: 255})
+    @Column({
+        type: "varchar",
+        length: 255
+    })
     @IsNotEmpty()
     @MinLength(10)
     password: string
 
-    @Column({type: "enum", enum: ["Female", "Male"]})
+    @Column({
+        type: "enum",
+        enum: Gender
+    })
     gender: string
 
-    @Column({type: "date", update: false})
+    @Column({
+        type: "date",
+        update: false
+    })
     @IsDate()
     birthday: Date | null
 
-    @Column({type: "decimal", precision: 10, scale: 2, nullable: true})
+    @Column({
+        type: "decimal",
+        precision: 10,
+        scale: 2,
+        nullable: true
+    })
     @IsOptional()
     @IsDecimal()
     fee: number
 
-    @Column({type: "varchar", length: 34, nullable: true, unique: true})
+    @Column({
+        name: "bank_account_number",
+        type: "varchar",
+        length: 34,
+        nullable: true,
+        unique: true
+    })
     bankAccountNumber: string
 
-    @OneToMany(() => UserImage, (userImage: UserImage) => userImage.user, {nullable: true, onDelete: "CASCADE"})
+    @OneToMany(
+        () => UserImage,
+        (userImage: UserImage) => userImage.user,
+        {nullable: true, onDelete: "CASCADE"}
+    )
     photos: UserImage[] | null
 
-    @OneToOne(() => Address, (address: Address) => address.user, {nullable: true, onDelete: "CASCADE"})
+    @OneToOne(
+        () => Address,
+        (address: Address) => address.user,
+        {nullable: true, onDelete: "CASCADE"}
+    )
     address: Address | null
 
-    @OneToMany(() => Certification, (certification: Certification) => certification.user, {
-        nullable: true,
-        onDelete: "CASCADE"
-    })
+    @OneToMany(
+        () => Certification,
+        (certification: Certification) => certification.user,
+        {nullable: true, onDelete: "CASCADE"}
+    )
     certifications: Certification[] | null
 
-    @ManyToMany(() => Role, (role: Role) => role.users)
-    @JoinTable({name: "userRoles"})
+    @ManyToMany(
+        () => Role,
+        (role: Role) => role.users
+    )
+    @JoinTable({
+        name: "user_role"
+    })
     roles: Role[] | null;
 
-    @OneToMany(() => Review, (review: Review) => review.reviewed, {nullable: true, onDelete: "CASCADE"})
+    @OneToMany(
+        () => Review,
+        (review: Review) => review.reviewed,
+        {nullable: true, onDelete: "CASCADE"}
+    )
     reviewsReceived: Review[] | null
 
-    @OneToMany(() => Review, (review: Review) => review.reviewer, {nullable: true, onDelete: "CASCADE"})
+    @OneToMany(
+        () => Review,
+        (review: Review) => review.reviewer,
+        {nullable: true, onDelete: "CASCADE"}
+    )
     reviewsGiven: Review[] | null
 }
