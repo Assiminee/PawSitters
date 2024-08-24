@@ -27,18 +27,18 @@ export class User extends BaseModel {
         this.fname = '';
         this.lname = '';
         this.email = '';
-        this.phone = '';
         this.password = '';
         this.gender = '';
-        this.bankAccountNumber = '';
         this.birthday = null;
+        this.phone = null;
+        this.bankAccountNumber = null;
         this.photos = null;
         this.address = null;
         this.certifications = null;
         this.roles = null;
         this.reviewsReceived = null;
         this.reviewsGiven = null;
-        this.fee = 0;
+        this.fee = null;
     }
 
     @Column({
@@ -74,7 +74,7 @@ export class User extends BaseModel {
     })
     @IsOptional()
     @IsPhoneNumber()
-    phone: string
+    phone: string | null
 
     @Column({
         type: "varchar",
@@ -105,7 +105,7 @@ export class User extends BaseModel {
     })
     @IsOptional()
     @IsDecimal()
-    fee: number
+    fee: number | null
 
     @Column({
         name: "bank_account_number",
@@ -114,7 +114,7 @@ export class User extends BaseModel {
         nullable: true,
         unique: true
     })
-    bankAccountNumber: string
+    bankAccountNumber: string | null
 
     @OneToMany(
         () => UserImage,
