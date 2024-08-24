@@ -1,9 +1,11 @@
 import {Column, Entity, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import {UserImage} from "./UserImage";
+import {BaseModel} from "./BaseModel";
 
 @Entity()
-export class User {
+export class User extends BaseModel {
     constructor() {
+        super();
         this.fname = '';
         this.lname = '';
         this.email = '';
@@ -14,9 +16,6 @@ export class User {
         this.bankAccountNumber = '';
         this.photos = [];
     }
-
-    @PrimaryGeneratedColumn("uuid")
-    id!: string;
 
     @Column("varchar", {length: 50})
     fname: string

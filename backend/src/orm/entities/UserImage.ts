@@ -1,15 +1,14 @@
-import {Column, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
+import {Column, Entity, ManyToOne, PrimaryGeneratedColumn, JoinColumn} from "typeorm";
 import {User} from "./User";
+import {BaseModel} from "./BaseModel";
 
 @Entity()
-export class UserImage {
+export class UserImage extends BaseModel {
     constructor() {
+        super();
         this.image = '';
         this.user = null;
     }
-
-    @PrimaryGeneratedColumn()
-    id!: number;
 
     @Column({type: "varchar", length: 255, unique: true})
     image: string
