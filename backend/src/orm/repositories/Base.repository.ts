@@ -86,6 +86,20 @@ export class BaseRepository<T extends ObjectLiteral> {
             });
     }
 
+    updateEntity = async (entity : any) => {
+        return new Promise((resolve, reject) => {
+            if (typeof entity !== this.cls)
+                reject({"Invalid Entity": typeof entity});
+            resolve(entity);
+        })
+            .then((entity) => {
+                return this.repository.save(entity as DeepPartial<T>);
+            })
+            .catch((err) => {
+                return err;
+            });
+    }
+
     countEntities = async (data : object) => {
         return new Promise((resolve, reject) => {
             const invalidColumns = this.hasInvalidColumns(data);

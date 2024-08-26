@@ -30,8 +30,12 @@ export class Pet extends BaseModel {
         this.description = '';
         this.temperament = '';
         this.gender = '';
+        this.name = '';
         this.size = 0.00;
     }
+
+    @Column({type: "varchar", length: 50})
+    name: string;
 
     @Column({ type: "date", update: false })
     birth_date: Date | null;

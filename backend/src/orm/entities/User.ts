@@ -36,12 +36,12 @@ export class User extends BaseModel {
         this.fname = '';
         this.lname = '';
         this.email = '';
-        this.phone = '';
+        this.phone = null;
         this.password = '';
         this.gender = '';
         this.birthday = null;
-        this.fee = 0.00;
-        this.bankAccountNumber = '';
+        this.fee = null;
+        this.bankAccountNumber = null;
         this.accountStat = '';
         this.address = null;
     }
@@ -80,7 +80,7 @@ export class User extends BaseModel {
     })
     @IsOptional()
     @IsPhoneNumber()
-    phone: string;
+    phone: string | null;
 
     @Column({
         type: "varchar",
@@ -111,7 +111,7 @@ export class User extends BaseModel {
     })
     @IsOptional()
     @IsDecimal()
-    fee: number;
+    fee: number | null;
 
     @Column({
         name: "bank_account_number",
@@ -120,9 +120,9 @@ export class User extends BaseModel {
         nullable: true,
         unique: true
     })
-    bankAccountNumber: string;
+    bankAccountNumber: string | null;
 
-    @Column({type: "enum", enum: AccountStat, name: "account_stat"})
+    @Column({type: "enum", enum: AccountStat, name: "account_stat", default: AccountStat.P})
     accountStat: string;
 
     @OneToMany(
