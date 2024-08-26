@@ -15,7 +15,7 @@ export class UserImage extends BaseModel {
         length: 255,
         unique: true
     })
-    image: string
+    image: string;
 
     @ManyToOne(
         () => User,
@@ -24,5 +24,5 @@ export class UserImage extends BaseModel {
     @JoinColumn({
         name: "user_id"
     })
-    user: User | null
+    user: User | null;
 }

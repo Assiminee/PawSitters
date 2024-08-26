@@ -4,31 +4,32 @@ import {User} from "./User";
 
 @Entity()
 export class Certification extends BaseModel {
+
     constructor() {
         super();
         this.title = '';
-        this.issueDate = null;
         this.organization = '';
         this.user = null;
+        this.issueDate = null;
     }
 
     @Column({
         type: "varchar",
         length: 255
     })
-    title: string
+    title: string;
 
     @Column({
         name: "issue_date",
         type: Date
     })
-    issueDate: Date | null
+    issueDate: Date | null;
 
     @Column({
         type: "varchar",
         length: 255
     })
-    organization: string
+    organization: string;
 
     @ManyToOne(
         () => User,
@@ -37,5 +38,5 @@ export class Certification extends BaseModel {
     @JoinColumn({
         name: "user_id"
     })
-    user: User | null
+    user: User | null;
 }

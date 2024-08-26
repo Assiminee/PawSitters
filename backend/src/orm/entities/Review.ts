@@ -7,10 +7,10 @@ import {User} from "./User";
 export class Review extends BaseModel {
     constructor() {
         super();
-        this.reviewed = null;
         this.reviewer = null;
+        this.reviewed = null;
         this.review = '';
-        this.rating = 0;
+        this.rating = 1;
     }
 
     @ManyToOne(
@@ -20,7 +20,7 @@ export class Review extends BaseModel {
     @JoinColumn({
         name: "reviewed_id"
     })
-    reviewed: User | null
+    reviewed: User | null;
 
     @ManyToOne(
         () => User,
@@ -29,16 +29,16 @@ export class Review extends BaseModel {
     @JoinColumn({
         name: "reviewer_id"
     })
-    reviewer: User | null
+    reviewer: User | null;
 
     @Column({
         type: "varchar",
         length: 255
     })
-    review: string
+    review: string;
 
     @Column({type: "int"})
-    @Min(0)
+    @Min(1)
     @Max(5)
-    rating: number
+    rating: number;
 }

@@ -2,64 +2,68 @@ import {Column, Entity, JoinColumn, OneToOne} from "typeorm";
 import {BaseModel} from "./BaseModel";
 import {User} from "./User";
 
+export enum Country {
+    GH = "Ghana",
+    MA = "Morocco"
+}
+
 @Entity()
 export class Address extends BaseModel {
     constructor() {
         super();
         this.buildingNum = null;
+        this.postalCode = '';
+        this.city = '';
+        this.user = null;
+        this.country = '';
+        this.floor = null;
         this.street = '';
         this.apartmentNum = null;
-        this.floor = null;
-        this.city = '';
-        this.country = '';
-        this.postalCode = '';
-        this.user = null
     }
-
     @Column({
         name: "building_number",
         type: "int",
         nullable: true
     })
-    buildingNum: number | null
+    buildingNum: number | null;
 
     @Column({
         type: "varchar",
         length: 255
     })
-    street: string
+    street: string;
 
     @Column({
         name: "apartment_number",
         type: "int",
         nullable: true
     })
-    apartmentNum: number | null
+    apartmentNum: number | null;
 
     @Column({
         type: "int",
         nullable: true
     })
-    floor: number | null
+    floor: number | null;
 
     @Column({
         type: "varchar",
         length: 200
     })
-    city: string
+    city: string;
 
     @Column({
-        type: "varchar",
-        length: 100
+        type: "enum",
+        enum: Country
     })
-    country: string
+    country: string;
 
     @Column({
         name: "postal_code",
         type: "varchar",
         length: 20
     })
-    postalCode: string
+    postalCode: string;
 
     @OneToOne(
         () => User,
@@ -68,5 +72,5 @@ export class Address extends BaseModel {
     @JoinColumn({
         name: "user_id"
     })
-    user: User | null
+    user: User | null;
 }

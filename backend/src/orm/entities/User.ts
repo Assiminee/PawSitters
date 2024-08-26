@@ -14,10 +14,19 @@ import {
     IsPhoneNumber,
     MinLength
 } from "class-validator";
+import {Booking} from "./Booking";
+import {Pet} from "./Pet";
+import exp from "node:constants";
 
 export enum Gender {
-    FEMALE = "Female",
-    MALE = "Male"
+    F = "Female",
+    M = "Male"
+}
+
+export enum AccountStat {
+    P = "Pending Activation",
+    A = "Activated",
+    D = "DELETED"
 }
 
 @Entity()
@@ -27,19 +36,16 @@ export class User extends BaseModel {
         this.fname = '';
         this.lname = '';
         this.email = '';
+        this.phone = '';
         this.password = '';
         this.gender = '';
         this.birthday = null;
-        this.phone = null;
-        this.bankAccountNumber = null;
-        this.photos = null;
+        this.fee = 0.00;
+        this.bankAccountNumber = '';
+        this.accountStat = '';
         this.address = null;
-        this.certifications = null;
-        this.roles = null;
-        this.reviewsReceived = null;
-        this.reviewsGiven = null;
-        this.fee = null;
     }
+
 
     @Column({
         name: "f_name",
@@ -47,7 +53,7 @@ export class User extends BaseModel {
         length: 50
     })
     @IsNotEmpty()
-    fname: string
+    fname: string;
 
     @Column({
         name: "l_name",
@@ -55,7 +61,7 @@ export class User extends BaseModel {
         length: 50
     })
     @IsNotEmpty()
-    lname: string
+    lname: string;
 
     @Column({
         type: "varchar",
@@ -64,7 +70,7 @@ export class User extends BaseModel {
     })
     @IsNotEmpty()
     @IsEmail()
-    email: string
+    email: string;
 
     @Column({
         type: "varchar",
@@ -74,7 +80,7 @@ export class User extends BaseModel {
     })
     @IsOptional()
     @IsPhoneNumber()
-    phone: string | null
+    phone: string;
 
     @Column({
         type: "varchar",
@@ -82,20 +88,20 @@ export class User extends BaseModel {
     })
     @IsNotEmpty()
     @MinLength(10)
-    password: string
+    password: string;
 
     @Column({
         type: "enum",
         enum: Gender
     })
-    gender: string
+    gender: string;
 
     @Column({
         type: "date",
         update: false
     })
     @IsDate()
-    birthday: Date | null
+    birthday: Date | null;
 
     @Column({
         type: "decimal",
@@ -105,7 +111,7 @@ export class User extends BaseModel {
     })
     @IsOptional()
     @IsDecimal()
-    fee: number | null
+    fee: number;
 
     @Column({
         name: "bank_account_number",
@@ -114,49 +120,67 @@ export class User extends BaseModel {
         nullable: true,
         unique: true
     })
-    bankAccountNumber: string | null
+    bankAccountNumber: string;
+
+    @Column({type: "enum", enum: AccountStat, name: "account_stat"})
+    accountStat: string;
 
     @OneToMany(
         () => UserImage,
-        (userImage: UserImage) => userImage.user,
-        {nullable: true, onDelete: "CASCADE"}
+        (userImage: UserImage) => userImage.user
     )
-    photos: UserImage[] | null
+    photos!: UserImage[];
 
     @OneToOne(
         () => Address,
-        (address: Address) => address.user,
-        {nullable: true, onDelete: "CASCADE"}
+        (address: Address) => address.user
     )
-    address: Address | null
+    address: Address | null;
 
     @OneToMany(
         () => Certification,
-        (certification: Certification) => certification.user,
-        {nullable: true, onDelete: "CASCADE"}
+        (certification: Certification) => certification.user
     )
-    certifications: Certification[] | null
+    certifications!: Certification[];
 
     @ManyToMany(
         () => Role,
         (role: Role) => role.users
     )
     @JoinTable({
-        name: "user_role"
+        name: "user_role",
+        joinColumn: { name: "user_id", referencedColumnName: "id" },
+        inverseJoinColumn: { name: "role_id", referencedColumnName: "id" },
     })
-    roles: Role[] | null;
+    roles!: Role[];
+
+    @OneToMany(
+        () => Pet,
+        (pets) => pets.user
+    )
+    pets!: Pet[];
 
     @OneToMany(
         () => Review,
         (review: Review) => review.reviewed,
-        {nullable: true, onDelete: "CASCADE"}
     )
-    reviewsReceived: Review[] | null
+    reviewsReceived!: Review[];
 
     @OneToMany(
         () => Review,
         (review: Review) => review.reviewer,
-        {nullable: true, onDelete: "CASCADE"}
     )
-    reviewsGiven: Review[] | null
+    reviewsGiven!: Review[];
+
+    @OneToMany(
+        () => Booking,
+        (booking : Booking) => booking.owner
+    )
+    bookings!: Booking[];
+
+    @OneToMany(
+        () => Booking,
+        (Booking : Booking) => Booking.sitter
+    )
+    sittings!: Booking[];
 }
