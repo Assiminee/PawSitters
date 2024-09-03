@@ -1,69 +1,71 @@
-import {Column, Entity, JoinColumn, OneToOne} from "typeorm";
+import {BeforeInsert, BeforeUpdate, Column, Entity, JoinColumn, OneToOne} from "typeorm";
 import {BaseModel} from "./BaseModel";
 import {User} from "./User";
+import {IsEnum, IsNotEmpty, IsNumber, IsNumberString, IsOptional, IsString} from "class-validator";
 
 export enum Country {
-    GH = "Ghana",
-    MA = "Morocco"
+    GH = "GHANA",
+    MA = "MOROCCO"
 }
 
 @Entity()
 export class Address extends BaseModel {
-    constructor() {
-        super();
-        this.buildingNum = null;
-        this.postalCode = '';
-        this.city = '';
-        this.user = null;
-        this.country = '';
-        this.floor = null;
-        this.street = '';
-        this.apartmentNum = null;
-    }
     @Column({
-        name: "building_number",
         type: "int",
         nullable: true
     })
-    buildingNum: number | null;
+    @IsOptional()
+    @IsNumber()
+    building_num?: number;
 
     @Column({
         type: "varchar",
         length: 255
     })
-    street: string;
-
-    @Column({
-        name: "apartment_number",
-        type: "int",
-        nullable: true
-    })
-    apartmentNum: number | null;
+    @IsNotEmpty()
+    @IsString()
+    street!: string;
 
     @Column({
         type: "int",
         nullable: true
     })
-    floor: number | null;
+    @IsOptional()
+    @IsNumber()
+    apartment_num?: number;
+
+    @Column({
+        type: "int",
+        nullable: true
+    })
+    @IsOptional()
+    @IsNumber()
+    floor?: number
 
     @Column({
         type: "varchar",
         length: 200
     })
-    city: string;
+    @IsNotEmpty()
+    @IsString()
+    city!: string;
+
 
     @Column({
         type: "enum",
         enum: Country
     })
-    country: string;
+    @IsNotEmpty()
+    @IsEnum(Country)
+    country!: string;
 
     @Column({
-        name: "postal_code",
         type: "varchar",
         length: 20
     })
-    postalCode: string;
+    @IsNotEmpty()
+    @IsString()
+    postal_code!: string;
 
     @OneToOne(
         () => User,
@@ -72,5 +74,13 @@ export class Address extends BaseModel {
     @JoinColumn({
         name: "user_id"
     })
-    user: User | null;
+    @IsNotEmpty()
+    user!: User;
+
+    @BeforeInsert()
+    @BeforeUpdate()
+    normalize() {
+        this.city = this.city.toLowerCase();
+        this.street = this.street.toLowerCase();
+    }
 }

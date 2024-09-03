@@ -1,18 +1,16 @@
-import {Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn} from "typeorm";
+import {BaseEntity, Column, Entity, ManyToMany, PrimaryGeneratedColumn, Unique} from "typeorm";
 import {User} from "./User";
+import {IsEnum, IsNotEmpty} from "class-validator";
 
 export enum Roles {
-    A = "Admin",
-    PO = "Pet Owner",
-    SP = "Service Provider"
+    A = "ADMIN",
+    O = "OWNER",
+    S = "SITTER"
 }
 
 @Entity()
-export class Role {
-    constructor() {
-        this.role = '';
-    }
-
+@Unique(['role'])
+export class Role extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id!: string
 
@@ -20,7 +18,9 @@ export class Role {
         type: "enum",
         enum: Roles
     })
-    role: string;
+    @IsNotEmpty({message: "Role title cannot be empty"})
+    @IsEnum(Roles)
+    role!: string;
 
     @ManyToMany(
         () => User,

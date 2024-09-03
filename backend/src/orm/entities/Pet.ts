@@ -1,69 +1,120 @@
-import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany } from "typeorm";
+import {
+    AfterLoad,
+    BeforeInsert,
+    BeforeUpdate,
+    Column,
+    Entity,
+    JoinColumn,
+    ManyToMany,
+    ManyToOne,
+    OneToMany,
+    Unique
+} from "typeorm";
 import { BaseModel } from "./BaseModel";
 import { User } from "./User";
 import { Breed } from "./Breed";
 import { PetImage } from "./PetImage";
 import { Booking } from "./Booking";
+import {IsDate, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength, Validate} from "class-validator";
+import {HasPetWithName} from "../custom_validation/PetCustomValidation";
 
 export enum Temperament {
-    F = "Friendly",
-    A = "Aggressive"
+    F = "FRIENDLY",
+    A = "AGGRESSIVE"
 }
 
 export enum PetStatus {
-    A = "Active",
-    D = "Deleted"
+    A = "ACTIVE",
+    D = "DELETED"
 }
 
 export enum PetGender {
-    F = "Female",
-    M = "Male"
+    F = "F",
+    M = "M"
 }
+
+export enum PetSize {
+    S = "S",
+    M = "M",
+    L = "L"
+}
+
+export interface PetData {
+    id : string,
+    createdAt: Date,
+    updatedAt: Date,
+    name: string,
+    birthdate: Date,
+    size: string,
+    gender: string,
+    temperament: string,
+    description: string,
+    status: string,
+    owner: string,
+    owner_id: string,
+    breed: string,
+    breed_id: string
+}
+
 @Entity()
+@Unique(['user', 'name'])
 export class Pet extends BaseModel {
-    constructor() {
-        super();
-        this.birth_date = null;
-        this.breed = null;
-        this.user = null;
-        this.status = '';
-        this.description = '';
-        this.temperament = '';
-        this.gender = '';
-        this.size = 0.00;
-    }
+    @Column({type: "varchar", length: 50})
+    @IsNotEmpty({message: "Must specify pet name"})
+    @IsString({message: "Pet name must be a string"})
+    @Validate(HasPetWithName)
+    name!: string;
 
     @Column({ type: "date", update: false })
-    birth_date: Date | null;
+    @IsNotEmpty({message: "Must specify pet birthdate"})
+    @IsDate({message: "Invalid birthdate"})
+    birthdate!: Date;
 
-    @Column({type: "decimal", precision: 5, scale: 2})
-    size: number;
+    @Column({type: "enum", enum: PetSize})
+    @IsNotEmpty()
+    @IsString()
+    @IsEnum(PetSize)
+    size!: string;
 
     @Column({
         type: "enum",
         enum: PetGender
     })
-    gender: string;
+    @IsNotEmpty()
+    @IsString()
+    @IsEnum(PetGender)
+    gender!: string;
 
-    @Column({type: "enum", enum: Temperament})
-    temperament: string;
+    @Column({type: "enum", enum: Temperament, default: Temperament.F})
+    @IsOptional()
+    @IsString()
+    @IsEnum(Temperament)
+    temperament!: string;
 
     @Column({type: "varchar", length: 1024})
-    description: string;
+    @IsNotEmpty({message: "Missing description"})
+    @IsString({message: "Description must be a string"})
+    @MinLength(30)
+    description!: string;
 
-    @Column({type: "enum", enum: PetStatus})
-    status: string;
+    @Column({type: "enum", enum: PetStatus, default: PetStatus.A})
+    @IsOptional()
+    @IsString()
+    @IsEnum(PetStatus)
+    status!: string;
 
     @OneToMany(
         () => PetImage,
         (petImages : PetImage) => petImages.pet
     )
+    @IsOptional()
     images!: PetImage[];
 
     @ManyToMany(
         () => Booking,
         (booking : Booking) => booking.pets
     )
+    @IsOptional()
     bookings!: Booking[];
 
     @ManyToOne(
@@ -71,12 +122,25 @@ export class Pet extends BaseModel {
         (user : User) => user.pets
     )
     @JoinColumn({name: "user_id"})
-    user: User | null;
+    @IsNotEmpty()
+    user!: User;
 
     @ManyToOne(
         () => Breed,
         (breeds : Breed) => breeds.pets
     )
     @JoinColumn({name: "breed_id"})
-    breed: Breed | null;
+    @IsNotEmpty()
+    breed!: Breed;
+
+    @BeforeInsert()
+    @BeforeUpdate()
+    normalize() {
+        this.name = this.name.toLowerCase();
+    }
+
+    @AfterLoad()
+    transform() {
+        this.birthdate = new Date(this.birthdate);
+    }
 }

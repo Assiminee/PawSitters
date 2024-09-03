@@ -5,9 +5,10 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "nodemon --watch './**/*.ts' --exec ts-node src/index.ts",
+    "dev": "nodemon --watch './**/*.ts' --exec ts-node index.ts",
     "typeorm": "typeorm-ts-node-commonjs",
-    "migration": "npm run build && typeorm migration:run -d ./dist/orm/data-source.js",
+    "create-migration": "npm run build && typeorm migration:generate ./dist/orm/migrations/UserPetMods -d ./dist/orm/data-source.js",
+    "migration": "typeorm migration:run -d ./dist/orm/data-source.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -21,10 +22,13 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
+    "axios": "^1.7.7",
     "class-validator": "^0.14.1",
+    "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "mysql2": "^3.11.0",
     "reflect-metadata": "^0.2.2",
-    "typeorm": "^0.3.20"
+    "typeorm": "^0.3.20",
+    "typeorm-extension": "^3.6.1"
   }
 }

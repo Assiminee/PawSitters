@@ -1,21 +1,18 @@
-import {Column, Entity, JoinColumn, ManyToOne} from "typeorm";
+import {Column, Entity, JoinColumn, ManyToOne, Unique} from "typeorm";
 import {User} from "./User";
 import {BaseModel} from "./BaseModel";
+import {IsNotEmpty, IsString} from "class-validator";
 
 @Entity()
+@Unique(['path'])
 export class UserImage extends BaseModel {
-    constructor() {
-        super();
-        this.image = '';
-        this.user = null;
-    }
-
     @Column({
         type: "varchar",
-        length: 255,
-        unique: true
+        length: 255
     })
-    image: string;
+    @IsNotEmpty({message: "Missing user image path"})
+    @IsString({message: "User image path must be a string"})
+    path!: string;
 
     @ManyToOne(
         () => User,
@@ -24,5 +21,6 @@ export class UserImage extends BaseModel {
     @JoinColumn({
         name: "user_id"
     })
-    user: User | null;
+    @IsNotEmpty()
+    user!: User;
 }

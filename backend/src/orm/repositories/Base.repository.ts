@@ -69,7 +69,7 @@ export class BaseRepository<T extends ObjectLiteral> {
             const missing = this.hasRequiredColumns(data);
 
             if (Object.keys(data).length === 0)
-                reject("Cannot save entity (missing data)");
+                reject("Cannot save entity (missing data.json)");
 
             if (Object.keys(invalid).length > 0 || Object.keys(missing).length > 0)
                 reject({"Invalid Columns": invalid, "Missing Columns": missing});
@@ -80,6 +80,20 @@ export class BaseRepository<T extends ObjectLiteral> {
                 const entityData: DeepPartial<T> = data as DeepPartial<T>;
                 const entity = this.repository.create(entityData);
                 return this.repository.save(entity);
+            })
+            .catch((err) => {
+                return err;
+            });
+    }
+
+    updateEntity = async (entity : any) => {
+        return new Promise((resolve, reject) => {
+            if (typeof entity !== this.cls)
+                reject({"Invalid Entity": typeof entity});
+            resolve(entity);
+        })
+            .then((entity) => {
+                return this.repository.save(entity as DeepPartial<T>);
             })
             .catch((err) => {
                 return err;

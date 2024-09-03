@@ -11,21 +11,25 @@ import {Payment} from "./entities/Payment";
 import {Pet} from "./entities/Pet";
 import {PetImage} from "./entities/PetImage";
 import {Species} from "./entities/Species";
+import { config } from 'dotenv';
+
+config();
 
 export const AppDataSource = new DataSource({
     type: "mysql",
-    host: "localhost",
-    port: 3306,
-    username: "root",
-    password: "",
-    database: "PawSitters",
+    host: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT || '3306', 10),
+    username: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
     entities: [
         User, UserImage, Role,
         Review, Certification,
         Address, Booking, Breed,
         Payment, Pet, PetImage, Species
     ],
+    // migrations: ["./migrations/**/*.ts"],
     synchronize: true,
-    logging: true,
+    logging: true
 });
 

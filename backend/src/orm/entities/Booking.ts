@@ -3,66 +3,60 @@ import {BaseModel} from "./BaseModel";
 import {User} from "./User";
 import {Payment} from "./Payment";
 import {Pet} from "./Pet";
+import {IsDate, IsEnum, IsNotEmpty, IsOptional, IsString} from "class-validator";
 
-export enum PaymentStats {
-    PENDING = "Pending",
-    ACTIVE = "Active",
-    CANCELLED = "Cancelled",
-    COMPLETE = "Complete"
+export enum BookingStat {
+    PENDING = "PENDING",
+    ACTIVE = "ACTIVE",
+    CANCELLED = "CANCELLED",
+    COMPLETE = "COMPLETED"
 }
 
 @Entity()
 export class Booking extends BaseModel {
-    constructor() {
-        super();
-        this.start_time =  "00:00";
-        this.end_time =  "00:00";
-        this.owner = null;
-        this.sitter = null;
-        this.payment = null;
-        this.end_date = null;
-        this.start_date = null;
-        this.status = '';
-    }
-
     @ManyToOne(
         () => User,
         (user: User) => user.bookings
     )
     @JoinColumn({name: "owner_id"})
-    owner: User | null;
+    @IsNotEmpty()
+    owner!: User;
 
     @ManyToOne(
         () => User,
         (user: User) => user.sittings
     )
     @JoinColumn({name: "sitter_id"})
-    sitter: User | null;
+    @IsNotEmpty()
+    sitter!: User;
 
     @OneToOne(
         () => Payment,
         (payment: Payment) => payment.booking
     )
     @JoinColumn({name: "payment_id"})
-    payment: Payment | null;
+    @IsOptional()
+    payment?: Payment | null;
 
     @Column({
         type: "enum",
-        enum: PaymentStats
+        enum: BookingStat,
+        default: BookingStat.PENDING
     })
-    status: string;
+    @IsNotEmpty()
+    @IsString()
+    @IsEnum(BookingStat)
+    status!: string;
 
     @Column({type: "date", update: false})
-    start_date: Date | null;
+    @IsNotEmpty({message: "Must specify a start date"})
+    @IsDate()
+    start_date!: Date;
 
     @Column({type: "date", update: false})
-    end_date: Date | null;
-
-    @Column({type: "time", nullable: false})
-    start_time: string;
-
-    @Column({type: "time", nullable: false})
-    end_time: string;
+    @IsNotEmpty({message: "Must specify a end date"})
+    @IsDate()
+    end_date!: Date;
 
     @ManyToMany(() => Pet, (pet : Pet) => pet.bookings)
     @JoinTable({
@@ -70,5 +64,6 @@ export class Booking extends BaseModel {
         joinColumn: {name: "booking_id", referencedColumnName: "id"},
         inverseJoinColumn: {name: "pet_id", referencedColumnName: "id"}
     })
+    @IsNotEmpty()
     pets!: Pet[];
 }

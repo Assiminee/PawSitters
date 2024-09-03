@@ -1,4 +1,15 @@
-import {Column, Entity, JoinTable, ManyToMany, OneToMany, OneToOne} from "typeorm";
+import {
+    AfterLoad,
+    BeforeInsert,
+    BeforeUpdate,
+    Column,
+    Entity,
+    JoinTable,
+    ManyToMany,
+    OneToMany,
+    OneToOne,
+    Unique
+} from "typeorm";
 import {UserImage} from "./UserImage";
 import {BaseModel} from "./BaseModel";
 import {Address} from "./Address";
@@ -7,101 +18,95 @@ import {Role} from "./Role";
 import {Review} from "./Review";
 import {
     IsDate,
-    IsDecimal,
-    IsEmail,
-    IsNotEmpty,
-    IsOptional,
-    IsPhoneNumber,
-    MinLength
+    IsEmail, IsEnum,
+    IsNotEmpty, IsNumber, IsNumberString,
+    IsOptional, IsString,
+    Matches, MinLength, Validate
 } from "class-validator";
 import {Booking} from "./Booking";
 import {Pet} from "./Pet";
-import exp from "node:constants";
+import {
+    HasNoDuplicateRoles,
+    IsAdult,
+    IsNotEmptyRolesArray,
+    IsSitterFeeValidConstraint,
+    IsValidPhone
+} from "../custom_validation/UserCustomValidation";
 
 export enum Gender {
-    F = "Female",
-    M = "Male"
+    F = "F",
+    M = "M"
 }
 
 export enum AccountStat {
-    P = "Pending Activation",
-    A = "Activated",
+    P = "PENDING",
+    A = "ACTIVATED",
     D = "DELETED"
 }
 
 @Entity()
+@Unique(['email'])
+@Unique(['phone'])
+@Unique(['bank_account_number'])
 export class User extends BaseModel {
-    constructor() {
-        super();
-        this.fname = '';
-        this.lname = '';
-        this.email = '';
-        this.phone = '';
-        this.password = '';
-        this.gender = '';
-        this.birthday = null;
-        this.fee = 0.00;
-        this.bankAccountNumber = '';
-        this.accountStat = '';
-        this.address = null;
-    }
-
-
     @Column({
-        name: "f_name",
         type: "varchar",
         length: 50
     })
-    @IsNotEmpty()
-    fname: string;
+    @IsNotEmpty({message: "First name required"})
+    @IsString({message: "First name must be a string"})
+    fname!: string;
 
     @Column({
-        name: "l_name",
         type: "varchar",
         length: 50
     })
-    @IsNotEmpty()
-    lname: string;
-
-    @Column({
-        type: "varchar",
-        length: 255,
-        unique: true
-    })
-    @IsNotEmpty()
-    @IsEmail()
-    email: string;
-
-    @Column({
-        type: "varchar",
-        length: 20,
-        unique: true,
-        nullable: true
-    })
-    @IsOptional()
-    @IsPhoneNumber()
-    phone: string;
+    @IsNotEmpty({message: "Last name required"})
+    @IsString({message: "Last name must be a string"})
+    lname!: string;
 
     @Column({
         type: "varchar",
         length: 255
     })
-    @IsNotEmpty()
-    @MinLength(10)
-    password: string;
+    @IsNotEmpty({message: "Email required"})
+    @IsEmail({}, {message: "Invalid email"})
+    email!: string;
+
+    @Column({
+        type: "varchar",
+        length: 20,
+        nullable: true
+    })
+    @Validate(IsValidPhone)
+    phone?: string | null;
+
+    @Column({
+        type: "varchar",
+        length: 255
+    })
+    @IsNotEmpty({message: "Password required"})
+    @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$/, {
+        message: "Password must be at least 8 characters long, contain lower and uppercase letters, a special character (@$!%*?&), and a number"
+    })
+    password!: string;
 
     @Column({
         type: "enum",
         enum: Gender
     })
-    gender: string;
+    @IsNotEmpty({message: "Gender must be specified"})
+    @IsEnum(Gender, {message: "Gender can either be 'F' (Female) or 'M' (Male)"})
+    gender!: string;
 
     @Column({
         type: "date",
         update: false
     })
-    @IsDate()
-    birthday: Date | null;
+    @IsNotEmpty({message: "Birthdate must be specified"})
+    @IsDate({message: "Invalid birthdate"})
+    @Validate(IsAdult)
+    birthday!: Date;
 
     @Column({
         type: "decimal",
@@ -110,37 +115,45 @@ export class User extends BaseModel {
         nullable: true
     })
     @IsOptional()
-    @IsDecimal()
-    fee: number;
+    @IsNumber({}, {message: "Fee must be a number"})
+    @Validate(IsSitterFeeValidConstraint)
+    fee?: number | null;
 
     @Column({
         name: "bank_account_number",
         type: "varchar",
         length: 34,
-        nullable: true,
-        unique: true
+        nullable: true
     })
-    bankAccountNumber: string;
+    @IsOptional()
+    @IsString()
+    @MinLength(34, {message: "Invalid length"})
+    bank_account_number?: string | null;
 
-    @Column({type: "enum", enum: AccountStat, name: "account_stat"})
-    accountStat: string;
+    @Column({type: "enum", enum: AccountStat, default: AccountStat.P})
+    @IsOptional()
+    @IsEnum(AccountStat)
+    account_stat!: string;
 
     @OneToMany(
         () => UserImage,
         (userImage: UserImage) => userImage.user
     )
+    @IsOptional()
     photos!: UserImage[];
 
     @OneToOne(
         () => Address,
         (address: Address) => address.user
     )
-    address: Address | null;
+    @IsOptional()
+    address!: Address;
 
     @OneToMany(
         () => Certification,
         (certification: Certification) => certification.user
     )
+    @IsOptional()
     certifications!: Certification[];
 
     @ManyToMany(
@@ -152,35 +165,60 @@ export class User extends BaseModel {
         joinColumn: { name: "user_id", referencedColumnName: "id" },
         inverseJoinColumn: { name: "role_id", referencedColumnName: "id" },
     })
+    @Validate(IsNotEmptyRolesArray)
+    @Validate(HasNoDuplicateRoles)
     roles!: Role[];
 
     @OneToMany(
         () => Pet,
         (pets) => pets.user
     )
+    @IsOptional()
     pets!: Pet[];
 
     @OneToMany(
         () => Review,
         (review: Review) => review.reviewed,
     )
-    reviewsReceived!: Review[];
+    @IsOptional()
+    reviews_received!: Review[];
 
     @OneToMany(
         () => Review,
         (review: Review) => review.reviewer,
     )
-    reviewsGiven!: Review[];
+    @IsOptional()
+    reviews_given!: Review[];
 
     @OneToMany(
         () => Booking,
         (booking : Booking) => booking.owner
     )
+    @IsOptional()
     bookings!: Booking[];
 
     @OneToMany(
         () => Booking,
         (Booking : Booking) => Booking.sitter
     )
+    @IsOptional()
     sittings!: Booking[];
+
+    @BeforeInsert()
+    @BeforeUpdate()
+    normalize() {
+        this.fname = this.fname.toLowerCase();
+        this.lname = this.lname.toLowerCase();
+        this.email = this.email.toLowerCase();
+
+        if (this.bank_account_number )
+            this.bank_account_number = this.bank_account_number.toLowerCase();
+    }
+
+    @AfterLoad()
+    transform() {
+        this.birthday = new Date(this.birthday);
+        if (this.fee)
+            this.fee = Number(this.fee);
+    }
 }
