@@ -28,8 +28,6 @@ export const AppDataSource = new DataSource({
         Address, Booking, Breed,
         Payment, Pet, PetImage, Species
     ],
-    // migrations: ["./migrations/**/*.ts"],
     synchronize: true,
     logging: true
 });
-
