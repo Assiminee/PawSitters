@@ -28,6 +28,7 @@ export const AppDataSource = new DataSource({
         Address, Booking, Breed,
         Payment, Pet, PetImage, Species
     ],
-    synchronize: false,
+    synchronize: true,
     logging: true
 });
+
