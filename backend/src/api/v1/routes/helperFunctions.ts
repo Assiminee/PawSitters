@@ -1,5 +1,5 @@
 import {EntityPropertyNotFoundError} from "typeorm";
-import {AppError, ForbiddenRequest} from "../errors/Errors";
+import {AppError} from "../errors/Errors";
 import {NextFunction, Request, Response} from "express";
 
 export const validateBody = (body: object) => {

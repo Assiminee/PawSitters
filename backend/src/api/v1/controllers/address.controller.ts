@@ -6,6 +6,14 @@ import {ConflictError} from "../errors/Errors";
 export class AddressController extends BaseController<Address> {
     constructor() {
         super(Address);
+        this.entityColumns.required_columns = [
+            "street", "city", "country", "postal_code"
+        ];
+        this.entityColumns.allowed_columns = [
+            "street", "city", "country", "postal_code",
+            "building_num", "apartment_num", "floor"
+        ];
+        this.entityColumns.updatable_columns = this.entityColumns.allowed_columns;
     }
 
     private checkUser = (data : object) => {

@@ -4,11 +4,11 @@ import {
     BeforeUpdate,
     Column,
     Entity,
-    JoinTable,
-    ManyToMany,
+    ManyToOne,
     OneToMany,
     OneToOne,
-    Unique
+    Unique,
+    JoinColumn
 } from "typeorm";
 import {UserImage} from "./UserImage";
 import {BaseModel} from "./BaseModel";
@@ -19,16 +19,14 @@ import {Review} from "./Review";
 import {
     IsDate,
     IsEmail, IsEnum,
-    IsNotEmpty, IsNumber, IsNumberString,
+    IsNotEmpty, IsNumber,
     IsOptional, IsString,
     Matches, MinLength, Validate
 } from "class-validator";
 import {Booking} from "./Booking";
 import {Pet} from "./Pet";
 import {
-    HasNoDuplicateRoles,
     IsAdult,
-    IsNotEmptyRolesArray,
     IsSitterFeeValidConstraint,
     IsValidPhone
 } from "../custom_validation/UserCustomValidation";
@@ -39,8 +37,7 @@ export enum Gender {
 }
 
 export enum AccountStat {
-    P = "PENDING",
-    A = "ACTIVATED",
+    A = "ACTIVE",
     D = "DELETED"
 }
 
@@ -51,7 +48,8 @@ export enum AccountStat {
 export class User extends BaseModel {
     @Column({
         type: "varchar",
-        length: 50
+        length: 50,
+        nullable: true
     })
     @IsNotEmpty({message: "First name required"})
     @IsString({message: "First name must be a string"})
@@ -59,7 +57,8 @@ export class User extends BaseModel {
 
     @Column({
         type: "varchar",
-        length: 50
+        length: 50,
+        nullable: true
     })
     @IsNotEmpty({message: "Last name required"})
     @IsString({message: "Last name must be a string"})
@@ -67,7 +66,8 @@ export class User extends BaseModel {
 
     @Column({
         type: "varchar",
-        length: 255
+        length: 255,
+        nullable: true
     })
     @IsNotEmpty({message: "Email required"})
     @IsEmail({}, {message: "Invalid email"})
@@ -78,12 +78,14 @@ export class User extends BaseModel {
         length: 20,
         nullable: true
     })
+    @IsOptional()
     @Validate(IsValidPhone)
     phone?: string | null;
 
     @Column({
         type: "varchar",
-        length: 255
+        length: 255,
+        nullable: true
     })
     @IsNotEmpty({message: "Password required"})
     @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$/, {
@@ -93,7 +95,8 @@ export class User extends BaseModel {
 
     @Column({
         type: "enum",
-        enum: Gender
+        enum: Gender,
+        nullable: true
     })
     @IsNotEmpty({message: "Gender must be specified"})
     @IsEnum(Gender, {message: "Gender can either be 'F' (Female) or 'M' (Male)"})
@@ -101,7 +104,7 @@ export class User extends BaseModel {
 
     @Column({
         type: "date",
-        update: false
+        nullable: true
     })
     @IsNotEmpty({message: "Birthdate must be specified"})
     @IsDate({message: "Invalid birthdate"})
@@ -130,7 +133,7 @@ export class User extends BaseModel {
     @MinLength(34, {message: "Invalid length"})
     bank_account_number?: string | null;
 
-    @Column({type: "enum", enum: AccountStat, default: AccountStat.P})
+    @Column({type: "enum", enum: AccountStat, default: AccountStat.A})
     @IsOptional()
     @IsEnum(AccountStat)
     account_stat!: string;
@@ -156,22 +159,17 @@ export class User extends BaseModel {
     @IsOptional()
     certifications!: Certification[];
 
-    @ManyToMany(
+    @ManyToOne(
         () => Role,
-        (role: Role) => role.users
+        (role: Role) => role.users,
     )
-    @JoinTable({
-        name: "user_role",
-        joinColumn: { name: "user_id", referencedColumnName: "id" },
-        inverseJoinColumn: { name: "role_id", referencedColumnName: "id" },
-    })
-    @Validate(IsNotEmptyRolesArray)
-    @Validate(HasNoDuplicateRoles)
-    roles!: Role[];
+    @JoinColumn({name : "role_id"})
+    @IsNotEmpty()
+    role!: Role;
 
     @OneToMany(
         () => Pet,
-        (pets) => pets.user
+        (pet : Pet) => pet.user
     )
     @IsOptional()
     pets!: Pet[];

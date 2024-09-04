@@ -16,7 +16,7 @@ import { Breed } from "./Breed";
 import { PetImage } from "./PetImage";
 import { Booking } from "./Booking";
 import {IsDate, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength, Validate} from "class-validator";
-import {HasPetWithName} from "../custom_validation/PetCustomValidation";
+import {HasPetWithName, UserHasOwnerRole} from "../custom_validation/PetCustomValidation";
 
 export enum Temperament {
     F = "FRIENDLY",
@@ -123,6 +123,7 @@ export class Pet extends BaseModel {
     )
     @JoinColumn({name: "user_id"})
     @IsNotEmpty()
+    @Validate(UserHasOwnerRole)
     user!: User;
 
     @ManyToOne(

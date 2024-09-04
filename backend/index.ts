@@ -1,5 +1,5 @@
 import {AppDataSource} from "./src/orm/data-source";
-import {createUsers} from "./src/init_users";
+// import {createUsers} from "./src/init_users";
 
 const PORT = process.env.SERVER_PORT || 8081;
 
@@ -16,7 +16,7 @@ const main = async () => {
 
         appRouter.listen(PORT, () => {
             console.log(`Listening on port ${PORT}`);
-            createUsers();
+            // createUsers();
         });
     } catch (err) {
         console.error(err);

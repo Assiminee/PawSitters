@@ -9,9 +9,7 @@
       "gender": "F",
       "fee": 26.48,
       "birthday": "1985-04-26",
-      "roles": [
-        "sitter"
-      ],
+      "role": "sitter",
       "address": {
         "building_num": 44,
         "street": "Sefrou street",
@@ -31,10 +29,7 @@
       "gender": "F",
       "fee": 16.02,
       "birthday": "1910-08-30",
-      "roles": [
-        "sitter",
-        "OWNER"
-      ],
+      "role": "owner",
       "address": {
         "building_num": 24,
         "street": "Route Hassan II",
@@ -74,10 +69,7 @@
       "gender": "F",
       "fee": 122.38,
       "birthday": "1987-10-14",
-      "roles": [
-        "sitter",
-        "OWNER"
-      ],
+      "role": "owner",
       "address": {
         "building_num": 81,
         "street": "Ouilaya",
@@ -116,9 +108,7 @@
       "password": "sX3$Hjx_",
       "gender": "M",
       "birthday": "1947-12-28",
-      "roles": [
-        "OWNER"
-      ],
+      "role": "owner",
       "address": {
         "building_num": 35,
         "street": "Rislane street",
@@ -154,9 +144,7 @@
       "password": "iR6%AOFRa",
       "gender": "F",
       "birthday": "1906-08-02",
-      "roles": [
-        "OWNER"
-      ],
+      "role": "owner",
       "address": {
         "building_num": 26,
         "street": "Union",
@@ -223,9 +211,7 @@
       "password": "rL1*tw_sCc\\X8i",
       "gender": "F",
       "birthday": "1954-01-09",
-      "roles": [
-        "ADMIN"
-      ],
+      "role": "ADMIN",
       "address": {
         "building_num": 87,
         "street": "Badeau",
@@ -243,9 +229,7 @@
       "phone": "+212610293846",
       "password": "hG3$FKc=XQ",
       "gender": "M",
-      "roles": [
-        "ADMIN"
-      ],
+      "role": "ADMIN",
       "birthday": "1952-11-22",
       "address": {
         "building_num": 5,
@@ -266,9 +250,7 @@
       "gender": "F",
       "fee": 39.6,
       "birthday": "1930-12-06",
-      "roles": [
-        "SITTER"
-      ],
+      "role": "SITTER",
       "address": {
         "building_num": 12,
         "street": "Maple Wood",
@@ -288,9 +270,7 @@
       "gender": "F",
       "fee": 143.1,
       "birthday": "1966-06-27",
-      "roles": [
-        "SITTER"
-      ],
+      "role": "SITTER",
       "address": {
         "building_num": 142,
         "street": "Bobwhite",
@@ -310,9 +290,7 @@
       "gender": "F",
       "fee": 96.59,
       "birthday": "1922-03-25",
-      "roles": [
-        "SITTER"
-      ],
+      "role": "SITTER",
       "address": {
         "building_num": 63,
         "street": "Duke",
@@ -331,9 +309,7 @@
       "password": "wY8*VJ$O!4|})/N",
       "gender": "F",
       "birthday": "1930-12-05",
-      "roles": [
-        "OWNER"
-      ],
+      "role": "owner",
       "address": {
         "building_num": 47,
         "street": "Menomonie",
@@ -371,9 +347,7 @@
       "phone": "+212610293815",
       "password": "kH9(\\S<M)I&!IbG",
       "gender": "F",
-      "roles": [
-        "OWNER"
-      ],
+      "role": "owner",
       "birthday": "1970-05-12",
       "address": {
         "building_num": 4,
@@ -409,10 +383,7 @@
       "password": "yF0?%|'z",
       "gender": "M",
       "birthday": "1970-07-19",
-      "roles": [
-        "SITTER",
-        "OWNER"
-      ],
+      "role": "owner",
       "address": {
         "building_num": 4,
         "street": "Nobel",
@@ -446,9 +417,7 @@
       "phone": "+212610293835",
       "password": "bF7(hgtU",
       "gender": "M",
-      "roles": [
-        "SITTER"
-      ],
+      "role": "SITTER",
       "birthday": "1938-06-16",
       "address": {
         "building_num": 20,
@@ -467,9 +436,7 @@
       "gender": "M",
       "fee": 134.19,
       "birthday": "1968-02-28",
-      "roles": [
-        "SITTER"
-      ],
+      "role": "SITTER",
       "address": {
         "building_num": 4,
         "street": "Amizmiz street",
@@ -488,9 +455,7 @@
       "password": "dV3|a9xF$}g8I$3",
       "gender": "M",
       "birthday": "1955-05-02",
-      "roles": [
-        "OWNER"
-      ],
+      "role": "owner",
       "address": {
         "building_num": 7252,
         "street": "Brickson Park",
@@ -558,9 +523,7 @@
       "phone": "+212610293875",
       "password": "aH5,Wp`hDaeIZ'()",
       "gender": "M",
-      "roles": [
-        "OWNER"
-      ],
+      "role": "owner",
       "birthday": "1988-02-26",
       "address": {
         "building_num": 55,
@@ -595,9 +558,7 @@
       "phone": "+212610293885",
       "password": "oC0\\lKZQZ\"el<",
       "gender": "M",
-      "roles": [
-        "OWNER"
-      ],
+      "role": "owner",
       "birthday": "1923-12-15",
       "address": {
         "building_num": 61,
@@ -632,9 +593,7 @@
       "phone": "+212610293895",
       "password": "oF9=_S@s*",
       "gender": "F",
-      "roles": [
-        "OWNER"
-      ],
+      "role": "owner",
       "birthday": "1973-11-01",
       "address": {
         "building_num": 26,
@@ -673,9 +632,7 @@
       "phone": "+212610293805",
       "password": "uO6+X'_j)DmH",
       "gender": "F",
-      "roles": [
-        "OWNER"
-      ],
+      "role": "owner",
       "birthday": "1903-08-05",
       "address": {
         "building_num": 4,

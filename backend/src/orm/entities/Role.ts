@@ -1,4 +1,4 @@
-import {BaseEntity, Column, Entity, ManyToMany, PrimaryGeneratedColumn, Unique} from "typeorm";
+import {BaseEntity, Column, Entity, OneToMany, PrimaryGeneratedColumn, Unique} from "typeorm";
 import {User} from "./User";
 import {IsEnum, IsNotEmpty} from "class-validator";
 
@@ -22,9 +22,9 @@ export class Role extends BaseEntity {
     @IsEnum(Roles)
     role!: string;
 
-    @ManyToMany(
+    @OneToMany(
         () => User,
-        (user: User) => user.roles
+        (user: User) => user.role
     )
     users!: User[];
 }

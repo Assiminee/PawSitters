@@ -2,13 +2,23 @@ import {BaseController} from "./base.controller";
 import {Pet, PetData} from "../../../orm/entities/Pet";
 import {User} from "../../../orm/entities/User";
 import {Breed} from "../../../orm/entities/Breed";
-import {NotFoundError} from "../errors/Errors";
+import {ForbiddenRequest, NotFoundError} from "../errors/Errors";
 import {UserController} from "./user.controller";
 
 export class PetController extends BaseController<Pet> {
     constructor() {
         super(Pet);
-        this.allowed = ["name", "size", "description", "temperament"];
+        this.entityColumns.updatable_columns = [
+            "name", "size", "description", "temperament"
+        ];
+        this.entityColumns.allowed_columns = [
+            "name", "size", "description", "temperament",
+            "birthdate", "gender", "breed"
+        ];
+        this.entityColumns.required_columns = [
+            "name", "size", "description",
+            "birthdate", "gender", "breed"
+        ];
     }
 
     private getPetData = (pet : Pet) : PetData => {
@@ -47,7 +57,13 @@ export class PetController extends BaseController<Pet> {
 
     public findPets = async (user_id : string) => {
         const user = await (new UserController())
-            .getEntityById(user_id, ['pets', 'pets.breed', 'pets.user']);
+            .getEntityById(user_id, ['pets', 'pets.breed', 'pets.user', 'role']);
+
+        if (user.role.role !== "OWNER")
+            throw new NotFoundError(
+                `Pets not found`,
+                {not_found : `Users with the role ${user.role.role} don't have pets`}
+                )
 
         return user.pets.map(pet => this.getPetData(pet));
     }
@@ -62,7 +78,6 @@ export class PetController extends BaseController<Pet> {
             },
             relations : ['user', 'breed']
         });
-
         return this.getPetData(pet);
     }
 
@@ -109,6 +124,12 @@ export class PetController extends BaseController<Pet> {
     }
 
     public createPet = async (data: object, user: User) => {
+        if (user.role.role !== "OWNER")
+            throw new ForbiddenRequest(
+                "Only users with the role 'OWNER' cat have pets.",
+                {failed : 'create', reason : 'Required role missing'}
+            );
+
         this.checkData(data);
         await this.setBreed(data);
         this.checkForbiddenData(data, 'status');
@@ -121,7 +142,6 @@ export class PetController extends BaseController<Pet> {
         const pet = this.repository.create(data);
         await this.propertyValidation(pet, "Couldn't creat pet");
         const savedPet = await this.repository.save(pet);
-
         return this.getPetData(savedPet);
     }
 
@@ -132,7 +152,7 @@ export class PetController extends BaseController<Pet> {
                 id : pet_id,
                 user : { id : user_id }
             },
-            relations : ['user', 'user.pets', 'breed']
+            relations : ['user', 'user.role', 'user.pets', 'breed']
         });
 
         this.forbiddenUpdate(data);
@@ -141,7 +161,6 @@ export class PetController extends BaseController<Pet> {
         this.updateProperties(pet, data);
         await this.propertyValidation(pet, "Couldn't update pet");
         const savedPet = await this.repository.save(pet);
-
         return this.getPetData(savedPet);
     }
 }

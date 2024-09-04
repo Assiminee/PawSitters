@@ -10,10 +10,10 @@ const petRouter = Router({mergeParams: true});
 
 petRouter.get<'/', UserParam>('/', async (req, res) => {
     try {
-        const petData = await (new PetController())
+        const pets = await (new PetController())
             .findPets(req.params.user_id)
 
-        res.status(200).json(petData);
+        res.status(200).json(pets);
     } catch (err) {
         const [code, json] = resData(err);
         res.status(code).json(json);
@@ -22,10 +22,10 @@ petRouter.get<'/', UserParam>('/', async (req, res) => {
 
 petRouter.get<'/:pet_id', MergedParams>('/:pet_id', async (req , res) => {
     try {
-        const petData = await (new PetController())
+        const pet = await (new PetController())
             .findPetById(req.params.pet_id, req.params.user_id);
 
-        res.status(200).json(petData);
+        res.status(200).json(pet);
     } catch (err) {
         const [code, json] = resData(err);
         res.status(code).json(json);
@@ -35,11 +35,11 @@ petRouter.get<'/:pet_id', MergedParams>('/:pet_id', async (req , res) => {
 petRouter.post<'/', UserParam>('/', ensureJsonContentType, async (req, res) => {
     try {
         const user = await (new UserController())
-            .getEntityById(req.params.user_id, ['pets', 'pets.user', 'pets.breed']);
-        const petData = await (new PetController())
+            .getEntityById(req.params.user_id, ['pets', 'pets.user', 'pets.breed', 'role']);
+        const pet = await (new PetController())
             .createPet(validateBody({...req.body}), user);
 
-        res.status(201).json(petData);
+        res.status(201).json(pet);
     } catch (err) {
         const [code, json] = resData(err);
         res.status(code).json(json);
@@ -48,10 +48,10 @@ petRouter.post<'/', UserParam>('/', ensureJsonContentType, async (req, res) => {
 
 petRouter.put<'/:pet_id', MergedParams>('/:pet_id', ensureJsonContentType, async (req, res) => {
     try {
-        const petData = await (new PetController())
+        const pet = await (new PetController())
             .editPet(validateBody({...req.body}), req.params.user_id, req.params.pet_id);
 
-        res.status(200).json(petData);
+        res.status(200).json(pet);
     } catch (err) {
         const [code, json] = resData(err);
         res.status(code).json(json);

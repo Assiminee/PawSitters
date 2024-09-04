@@ -6,7 +6,9 @@ import {AppError, ConflictError, NotFoundError} from "../errors/Errors";
 export class BreedController extends BaseController<Breed> {
     constructor() {
         super(Breed);
-        this.uniqueColumns = ['name'];
+        this.entityColumns.required_columns = ['name'];
+        this.entityColumns.unique_columns = ['name'];
+        this.entityColumns.allowed_columns= ['name'];
     }
 
     public getBreedById = async (species: Species, breed_id: string) => {

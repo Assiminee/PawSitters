@@ -7,10 +7,16 @@ import {Species} from "../../../orm/entities/Species";
 const speciesRouter = Router();
 
 speciesRouter.get('/', async (req, res) => {
-    const species = await (new BaseController(Species))
-        .getEntities(["breeds"]);
+    try {
+        const species = await Species.find({
+            relations: ["breeds"]
+        });
 
-    res.status(200).json(species);
+        res.status(200).json(species);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json(err);
+    }
 });
 
 speciesRouter.get('/:species_id', async (req, res) => {

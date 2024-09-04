@@ -1,6 +1,5 @@
 import {AppDataSource} from "../../../orm/data-source";
 import {
-    DeepPartial,
     EntityMetadata,
     EntityTarget,
     FindOptionsWhere,
@@ -8,7 +7,7 @@ import {
     ObjectLiteral,
     Repository
 } from "typeorm";
-import {AppError, NotFoundError, InvalidDataError, ForbiddenRequest} from "../errors/Errors";
+import {NotFoundError, InvalidDataError, ForbiddenRequest} from "../errors/Errors";
 import {validate} from "class-validator";
 import {BaseModel} from "../../../orm/entities/BaseModel";
 
@@ -20,13 +19,19 @@ export interface JsonResponse {
     invalid_columns: string[];
 }
 
+export interface EntityColumns {
+    required_columns: string[];
+    unique_columns: string[];
+    updatable_columns: string[];
+    allowed_columns: string[];
+}
+
 export class BaseController<T extends ObjectLiteral> {
     public json: JsonResponse;
     public metaData: EntityMetadata;
     public repository: Repository<T>;
     protected cls: EntityTarget<T>;
-    protected uniqueColumns: string[];
-    protected allowed : string[];
+    protected entityColumns : EntityColumns;
 
     constructor(
         cls: EntityTarget<T>
@@ -34,8 +39,14 @@ export class BaseController<T extends ObjectLiteral> {
         this.cls = cls;
         this.repository = AppDataSource.getRepository(this.cls);
         this.metaData = AppDataSource.getMetadata(this.cls);
-        this.uniqueColumns = [];
-        this.allowed = []
+
+        this.entityColumns = {
+            required_columns: [],
+            unique_columns: [],
+            updatable_columns: [],
+            allowed_columns: []
+        }
+
         this.json = {
             errors: 0,
             existing_data: {},
@@ -88,11 +99,12 @@ export class BaseController<T extends ObjectLiteral> {
     }
 
     protected forbiddenUpdate = (data: object) => {
-        const forbidden = Object.keys(data).filter(key => !this.allowed.includes(key));
+        const allowed = this.entityColumns.updatable_columns;
+        const forbidden = Object.keys(data).filter(key => !allowed.includes(key));
 
         if (forbidden.length > 0) {
             const message = 'Attempting to edit fields ' + forbidden.join(', ') + '. ' +
-                'Can only edit fields ' + this.allowed.join(', ');
+                'Can only edit fields ' + allowed.join(', ');
             throw new ForbiddenRequest(message, {failed: 'update'});
         }
     }
@@ -124,31 +136,8 @@ export class BaseController<T extends ObjectLiteral> {
             throw new InvalidDataError(message, this.json);
     }
 
-    getNonNullableColumns = (): string[] => {
-        const columns = this.metaData.columns;
-        return columns
-            .filter(column =>
-                !column.isNullable &&
-                !column.isPrimary &&
-                !column.isCreateDate &&
-                !column.isUpdateDate &&
-                column.default === undefined
-            )
-            .map(column => column.propertyName);
-    }
-
-    getAllowedColumns = (): string[] => {
-        const columns = this.metaData.columns;
-        return columns
-            .filter((col) =>
-                !col.isPrimary &&
-                !col.isCreateDate &&
-                !col.isUpdateDate
-            ).map(col => col.propertyName);
-    }
-
     hasRequiredColumns = (data: object) => {
-        const missingColumns = (this.getNonNullableColumns())
+        const missingColumns = (this.entityColumns.required_columns)
             .filter((col) => !(col in data));
 
         if (missingColumns.length > 0) {
@@ -160,7 +149,7 @@ export class BaseController<T extends ObjectLiteral> {
     }
 
     hasInvalidColumns = (data: object) => {
-        const cols = this.getAllowedColumns();
+        const cols = this.entityColumns.allowed_columns;
         const invalidColumns = (Object.keys(data)).filter((key) => !cols.includes(key));
 
         for (const invalidColumn of invalidColumns) {
@@ -174,14 +163,15 @@ export class BaseController<T extends ObjectLiteral> {
     }
 
     hasExistingData = async (data: object, id: string | null = null) => {
-        if (this.uniqueColumns.length === 0)
+        if (this.entityColumns.unique_columns.length === 0)
             return {};
 
+        const unique = this.entityColumns.unique_columns;
         let existingData = {};
 
         const conditions = Object.entries(data).map(
             ([key, value]) =>
-                this.uniqueColumns.includes(key) ? {[key]: value} as FindOptionsWhere<T> : null
+                unique.includes(key) ? {[key]: value} as FindOptionsWhere<T> : null
         ).filter(condition => condition !== null);
 
         for (const condition of conditions) {
@@ -201,62 +191,6 @@ export class BaseController<T extends ObjectLiteral> {
         }
     }
 
-    // getForeignKeys = (): string[] => {
-    //     return this.metaData.foreignKeys
-    //         .map(key =>
-    //             key.columns.map(
-    //                 column => column.propertyName
-    //             )
-    //         ).flat();
-    // }
-
-    // hasInvalidRelations = (relations : string[]) => {
-    //     const allRelations = this.metaData.relations.map(relation =>
-    //         relation.propertyName
-    //     );
-    //
-    //     const invalidRelations = relations.filter(relation =>
-    //         !allRelations.includes(relation)
-    //     );
-    //
-    //     if (invalidRelations.length > 0)
-    //         throw new InvalidDataError(`Invalid Relations: ${invalidRelations.join(', ')}`);
-    // }
-
-    // hasInvalidRelations = (relations : RelationsArray) => {
-    //     const rel = [];
-    //
-    //     for (const relation of relations) {
-    //         if (this.cls === relation.root)
-    //             continue;
-    //
-    //         const entity = relation.root;
-    //         const entityRelations = relation.relations;
-    //
-    //         if (!AppDataSource.hasMetadata(entity))
-    //             throw new InvalidDataError(`Invalid Entity: ${entity}`);
-    //
-    //         const validRelations = AppDataSource.getMetadata(entity)
-    //             .relations.map(rel => rel.propertyName);
-    //         const invalidRelations = entityRelations.filter(entityRelation =>
-    //             !validRelations.includes(entityRelation)
-    //         )
-    //
-    //         if (invalidRelations.length > 0)
-    //             throw new InvalidDataError(`Invalid relations for entity ${entity}: ${invalidRelations.join(', ')}`);
-    //
-    //     }
-    //
-    // }
-
-    // hasOwnedRelations = (relations: string[]) => {
-    //     const ownderRelations = this.metaData.relations.filter(relation =>
-    //         relation.isOwning
-    //     ).map(relation => relation.propertyName);
-    //
-    //     return relations.filter(relation => ownderRelations.includes(relation));
-    // }
-
     getEntityById = async (id: string, relations: string[] | null = null) => {
         const entity = await this.repository.findOne({
             where: {id: id} as object,
@@ -267,72 +201,5 @@ export class BaseController<T extends ObjectLiteral> {
             throw new NotFoundError(`${this.metaData.name} not found`, {not_found: id});
 
         return entity;
-    }
-
-    getEntities = async (relations: string[] | null = null) => {
-        return await this.repository.find({
-            relations: relations as string[]
-        });
-    };
-
-    saveEntity = async (data: object | null = null) => {
-        if (!data || Object.keys(data).length === 0)
-            throw new InvalidDataError("Cannot save entity (missing data.json)", {missing: 'all'});
-
-        this.hasInvalidColumns(data);
-        this.hasRequiredColumns(data);
-        await this.hasExistingData(data);
-
-        const entityData: DeepPartial<T> = data as DeepPartial<T>;
-        const entity = this.repository.create(entityData);
-
-        const validEntity = await validate(entity);
-        console.log(validEntity);
-
-        return await this.repository.save(entity);
-    }
-
-    updateEntity = async (id: string, data: object | null = null) => {
-        const exists = await this.repository.existsBy({id: id} as object);
-
-        if (!exists)
-            throw new NotFoundError(`${this.metaData.name} doesn't exist`, {notFound: id});
-
-        if (!data || Object.keys(data).length === 0)
-            throw new InvalidDataError('Cannot update entity (missing data.json)', {missing: 'all'});
-
-        this.hasInvalidColumns(data);
-        await this.hasExistingData(data);
-
-        await this.repository.update(id, data);
-        const updatedEntity = await this.repository.findOneBy({id: id} as object);
-
-        if (!updatedEntity)
-            throw new AppError(`Update failed`, 500, {failed: 'update', reason: 'Unknown'});
-
-        return updatedEntity;
-    }
-
-    countEntities = async (data: object) => {
-        this.hasInvalidColumns(data);
-        if (Object.keys(data as object).length === 0)
-            return await this.repository.count();
-
-        return await this.repository.countBy(data as object);
-    }
-
-    deleteEntity = async (id: string) => {
-        const entity = await this.repository.findOne(
-            {where: {id: id} as object}
-        );
-
-        if (!entity)
-            throw new NotFoundError(`${this.metaData.name} not found`, {notFound: id});
-
-        const delRes = await this.repository.delete({id: id} as object);
-        if (delRes.affected === 0)
-            throw new AppError(`Delete failed`, 500, {failed: 'delete', reason: 'Unknown'});
-
-        return;
     }
 }

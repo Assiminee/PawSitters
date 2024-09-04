@@ -1,17 +1,33 @@
 import {BaseController} from "./base.controller";
 import {User} from "../../../orm/entities/User";
 import {Role, Roles} from "../../../orm/entities/Role";
-import {In} from "typeorm";
+import {NotFoundError} from "../errors/Errors";
 
 export class UserController extends BaseController<User> {
     constructor() {
         super(User);
-        this.uniqueColumns = ['email', 'phone', 'bankAccountNumber'];
-        this.allowed = ["email", "phone", "bank_account_number", "password", "fee"];
+        this.entityColumns.required_columns = [
+            "fname", "lname", "email",
+            "password", "gender", "birthday",
+            "role"
+        ];
+        this.entityColumns.unique_columns = [
+            "email", "phone", "bank_account_number"
+        ];
+        this.entityColumns.updatable_columns = [
+            "email", "phone", "bank_account_number", "password", "fee"
+        ]
+        this.entityColumns.allowed_columns = [
+            "fname", "lname", "email",
+            "password", "gender", "birthday",
+            "role", "phone", "bank_account_number",
+            "fee"
+        ]
     }
 
     private getAdmins = async (params: object) => {
         const options = this.getOptions(params);
+        const relations = this.getRelations(params);
         const select = [
             "id", "fname", "lname",
             "createdAt", "updatedAt",
@@ -19,50 +35,43 @@ export class UserController extends BaseController<User> {
             "gender", "birthday", "account_stat"
         ];
 
-        const users =  await this.repository.find({
+        return await this.repository.find({
             select: select,
             where: options,
-            relations: ["roles", "address"]
+            relations: relations
         });
-
-        return users.filter(user => user.roles.some(role => role.role === "ADMIN"));
     }
 
     private getOptions = (params: object) => {
+        let options = {};
         if (!('deleted' in params))
-            return {};
-
-        if (params.deleted === 'true')
-            return {account_stat: "DELETED"}
+            options = {};
         else
-            return {account_stat: In(["ACTIVE", "PENDING"])};
+            options = {account_stat: params.deleted === 'true' ? "DELETED" : "ACTIVE"};
+
+        if (!('role' in params))
+            return options;
+
+        return {...options, role: {role: (params.role as string).toUpperCase()}};
     }
 
     private getRelations = (params: object) => {
+        if ('role' in params && params.role === 'admin')
+            return ["role", "address"];
+
         const relations = [
             "address", "photos",
             "reviews_received",
-            "reviews_given", "roles"
+            "reviews_given", "role"
         ];
 
         if ('role' in params) {
-            if (params.role === 'sitter')
-                relations.push(...["sittings", "certifications"]);
-            else
-                relations.push("pets");
+            params.role === 'sitter' ?
+                relations.push(...["sittings", "certifications"]) :
+                relations.push(...["pets", "bookings"]);
         }
 
         return relations;
-    }
-
-    private filterUsers = (users : User[], params : object) => {
-        if (!('role' in params))
-            return users;
-
-        if (params.role === 'sitter')
-            return users.filter(user => user.roles.some(role => role.role === "SITTER"));
-        else
-            return users.filter(user => user.roles.some(role => role.role === "OWNER"));
     }
 
     public getUsers = async (params: object) => {
@@ -72,12 +81,28 @@ export class UserController extends BaseController<User> {
         const options = this.getOptions(params);
         const relations = this.getRelations(params);
 
-        const users = await this.repository.find({
+        return await this.repository.find({
             where: options,
             relations: relations
         });
+    }
 
-        return this.filterUsers(users, params);
+    public getUser = async (id: string) => {
+        const user = await this.repository.findOne({
+            where: {id: id},
+            select: ['role', 'id'],
+            relations: ['role']
+        });
+
+        if (!user)
+            throw new NotFoundError(`User not found`, {not_found: `Invalid ID ${id}`});
+
+        const relations = this.getRelations({role: user.role.role.toLowerCase()});
+
+        return await this.repository.findOne({
+            where: {id: id},
+            relations: relations
+        })
     }
 
     private checkPhone = (data: object) => {
@@ -103,58 +128,22 @@ export class UserController extends BaseController<User> {
             arr.every(item => (typeof item === 'string' && item.length > 0));
     }
 
-    private validRolesArrayFormat = (data: object): string[] => {
-        if (!('roles' in data)) {
-            this.appendMissingData('roles');
-            return [];
+    private setRole = async (data: object) => {
+        if (!('role' in data))
+            return;
+
+        if (typeof data.role !== 'string' ||
+            !Object.values(Roles).includes(data.role.toUpperCase() as Roles)
+        ) {
+            delete data.role;
+            return;
         }
 
-        if (!this.isArrayOfValidStrings(data.roles))
-            return [];
-
-        const roles = data.roles as string[];
-        delete data.roles;
-        return roles;
-    }
-
-    private validRoles = (inputRoles: string[]) => {
-        if (inputRoles.length === 0)
-            return [];
-
-        inputRoles = inputRoles.map(role => role.toUpperCase());
-        const roles = Object.values(Roles);
-        const validRoles = [];
-
-        for (const role of roles) {
-            if (inputRoles.includes(role))
-                validRoles.push(role);
-        }
-
-        return validRoles;
-    }
-
-    private getRoles = async (inputRoles: string[]) => {
-        let roles = [];
-        const missingRoles: string[] = [];
-
-        for (const inputRole of inputRoles) {
-            const role = await Role.findOneBy({role: inputRole});
-            if (!role)
-                missingRoles.push(inputRole);
-            else
-                roles.push(role);
-        }
-
-        if (missingRoles.length === 0)
-            return roles;
-
-        return [];
+        data.role = await Role.findOneBy({role: data.role.toUpperCase()});
     }
 
     public createUser = async (data: object) => {
-        let inputRoles = this.validRolesArrayFormat(data);
-        inputRoles = this.validRoles(inputRoles);
-
+        await this.setRole(data);
         this.checkData(data);
         this.checkPhone(data);
         await this.hasExistingData(data);
@@ -163,81 +152,19 @@ export class UserController extends BaseController<User> {
         this.checkAccountStatus(data);
 
         const newUser = this.repository.create(data);
-        const roles = await this.getRoles(inputRoles);
-        newUser.roles = [];
-
-        if (roles.length > 0)
-            newUser.roles.push(...roles);
 
         await this.propertyValidation(newUser, 'Could not create user');
 
         return await this.repository.save(newUser);
     }
 
-    private deleteRoles = async (user: User, inputRoles: Role[]) => {
-        if (inputRoles.length === 0)
-            return;
-
-        const invalidRoles = [];
-
-        for (const inputRole of inputRoles) {
-            const roleIndex = user.roles.findIndex(role => role.role === inputRole.role);
-            if (roleIndex !== -1) {
-                if (inputRole.role === 'SITTER')
-                    user.fee = null;
-                user.roles.splice(roleIndex, 1);
-            } else
-                invalidRoles.push(inputRole);
-        }
-
-        if (invalidRoles.length > 0) {
-            const message = "User doesn't have the following roles: " +
-                invalidRoles.map(role => role.role).join(', ');
-            this.appendInvalidData({
-                delete_roles: message
-            });
-        }
-    }
-
-    private addRoles = async (user: User, inputRoles: Role[]) => {
-        if (inputRoles.length === 0)
-            return;
-
-        user.roles.push(...inputRoles);
-    }
-
-    private checkEditRoles = async (data: object, key: string) => {
-        if (!(key in data))
-            return [];
-
-        if (!this.isArrayOfValidStrings((data as any)[key])) {
-            this.appendInvalidData({[key]: "Must be an array of strings"});
-            delete (data as any)[key];
-            return [];
-        }
-
-        let validRoles = this.validRoles((data as any)[key]);
-        delete (data as any)[key];
-
-        if (validRoles.length === 0) {
-            this.appendInvalidData({[key]: `Invalid roles: ${(data as any)[key].join(", ")}`});
-            return [];
-        }
-
-        return await this.getRoles(validRoles);
-    }
-
     public editUser = async (id: string, data: object) => {
-        const user = await this.getEntityById(id, ['roles']);
-        const del = 'delete_roles' in data ? await this.checkEditRoles(data, 'delete_roles') : [];
-        const add = 'add_roles' in data ? await this.checkEditRoles(data, 'add_roles') : [];
+        const user = await this.getEntityById(id, ['role']);
 
         this.hasInvalidColumns(data);
         this.forbiddenUpdate(data);
         this.checkPhone(data);
-        await this.hasExistingData(data);
-        await this.deleteRoles(user, del);
-        await this.addRoles(user, add);
+        await this.hasExistingData(data, id);
         this.updateProperties(user, data);
         await this.propertyValidation(user, "Could not update user");
 
@@ -245,6 +172,18 @@ export class UserController extends BaseController<User> {
     }
 
     public deleteUser = async (id: string) => {
-        const user = await this.getEntityById(id, ['roles']);
+        const user = await this.repository.findOne({
+            where : {id: id},
+            select : ['id', 'role'],
+            relations: ['role']
+        });
+
+        if (!user)
+            throw new NotFoundError(
+                "User not found",
+                {failed : "delete", reason: `Invalid id ${id}`}
+            );
+
+        
     }
 }

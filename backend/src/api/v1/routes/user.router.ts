@@ -25,9 +25,7 @@ userRouter.get('/', validateQuery, async (req, res) => {
 
 userRouter.get('/:user_id', async (req, res) => {
     try {
-        const user = await (new UserController()).getEntityById(
-            req.params.user_id
-        );
+        const user = await (new UserController()).getUser(req.params.user_id);
 
         res.status(200).json(user);
     } catch (err) {
