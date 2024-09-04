@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    @apply m-0 p-0 h-max text-gray-600;
+}
+
+.login_fields {
+    @apply outline-none bg-transparent text-sm border-b border-black;
+}
+
+.signup_fields {
+    @apply w-full bg-transparent outline-none text-sm;
+}
+
+.scrollbar::-webkit-scrollbar {
+    width: 11px;
+}
+.scrollbar::-webkit-scrollbar-track {
+    @apply bg-gray-500;
+}
+.scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gray-300;
+}

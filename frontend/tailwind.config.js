@@ -6,6 +6,12 @@ export default {
   ],
   theme: {
     extend: {
+      colors: {
+        primary: '#9BEBA2',
+        secondary: {
+          100: '#D9FCBB',
+        }
+      },
       fontFamily: {
         body: ['Nunito']
       }
