@@ -69,7 +69,8 @@ export class Address extends BaseModel {
 
     @OneToOne(
         () => User,
-        (user: User) => user.address
+        (user: User) => user.address,
+        {nullable : false}
     )
     @JoinColumn({
         name: "user_id"

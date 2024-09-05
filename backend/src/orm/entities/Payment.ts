@@ -1,7 +1,7 @@
 import {Column, Entity, OneToOne, Unique} from "typeorm";
 import { BaseModel } from "./BaseModel";
 import {Booking} from "./Booking";
-import {IsNotEmpty, IsNumber, IsString} from "class-validator";
+import {IsNotEmpty, IsNumber, IsOptional, IsString} from "class-validator";
 
 @Entity()
 @Unique(['transaction_id'])
@@ -12,6 +12,7 @@ export class Payment extends BaseModel {
     amount!: number;
 
     @Column({type: "timestamp", update: false, default: () => "CURRENT_TIMESTAMP"})
+    @IsOptional()
     date!: Date;
 
     @Column("varchar", {length: 45})

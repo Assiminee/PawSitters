@@ -60,7 +60,7 @@ export const createUsers = () => {
                     delete user.pets;
                 }
 
-                postRequest(root, user, (responseBody) => {
+                postRequest(`${root}?register`, user, (responseBody) => {
                     const response = JSON.parse(responseBody);
                     const userId = response.id;
 

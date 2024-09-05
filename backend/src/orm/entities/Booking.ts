@@ -3,7 +3,13 @@ import {BaseModel} from "./BaseModel";
 import {User} from "./User";
 import {Payment} from "./Payment";
 import {Pet} from "./Pet";
-import {IsDate, IsEnum, IsNotEmpty, IsOptional, IsString} from "class-validator";
+import {ArrayNotEmpty, IsDate, IsEnum, IsNotEmpty, IsOptional, IsString, Validate} from "class-validator";
+import {
+    HasBankAccountNumber,
+    HasOwnerRole,
+    HasSitterRole,
+    InSameCityCountry, IsValidInterval
+} from "../custom_validation/BookingCustomValidation";
 
 export enum BookingStat {
     PENDING = "PENDING",
@@ -20,6 +26,8 @@ export class Booking extends BaseModel {
     )
     @JoinColumn({name: "owner_id"})
     @IsNotEmpty()
+    @Validate(HasOwnerRole)
+    @Validate(HasBankAccountNumber)
     owner!: User;
 
     @ManyToOne(
@@ -28,6 +36,9 @@ export class Booking extends BaseModel {
     )
     @JoinColumn({name: "sitter_id"})
     @IsNotEmpty()
+    @Validate(HasSitterRole)
+    @Validate(InSameCityCountry)
+    @Validate(HasBankAccountNumber)
     sitter!: User;
 
     @OneToOne(
@@ -43,7 +54,7 @@ export class Booking extends BaseModel {
         enum: BookingStat,
         default: BookingStat.PENDING
     })
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     @IsEnum(BookingStat)
     status!: string;
@@ -54,8 +65,9 @@ export class Booking extends BaseModel {
     start_date!: Date;
 
     @Column({type: "date", update: false})
-    @IsNotEmpty({message: "Must specify a end date"})
+    @IsNotEmpty({message: "Must specify an end date"})
     @IsDate()
+    @Validate(IsValidInterval)
     end_date!: Date;
 
     @ManyToMany(() => Pet, (pet : Pet) => pet.bookings)
@@ -64,6 +76,6 @@ export class Booking extends BaseModel {
         joinColumn: {name: "booking_id", referencedColumnName: "id"},
         inverseJoinColumn: {name: "pet_id", referencedColumnName: "id"}
     })
-    @IsNotEmpty()
+    @ArrayNotEmpty({ message: 'A booking must involve at least one pet' })
     pets!: Pet[];
 }

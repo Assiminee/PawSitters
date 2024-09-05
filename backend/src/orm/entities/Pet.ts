@@ -7,13 +7,11 @@ import {
     JoinColumn,
     ManyToMany,
     ManyToOne,
-    OneToMany,
     Unique
 } from "typeorm";
 import { BaseModel } from "./BaseModel";
 import { User } from "./User";
 import { Breed } from "./Breed";
-import { PetImage } from "./PetImage";
 import { Booking } from "./Booking";
 import {IsDate, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength, Validate} from "class-validator";
 import {HasPetWithName, UserHasOwnerRole} from "../custom_validation/PetCustomValidation";
@@ -103,12 +101,9 @@ export class Pet extends BaseModel {
     @IsEnum(PetStatus)
     status!: string;
 
-    @OneToMany(
-        () => PetImage,
-        (petImages : PetImage) => petImages.pet
-    )
+    @Column({type : 'varchar', length: 255, nullable: true})
     @IsOptional()
-    images!: PetImage[];
+    image_path?: string | null;
 
     @ManyToMany(
         () => Booking,

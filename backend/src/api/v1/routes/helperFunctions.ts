@@ -32,7 +32,56 @@ export const resData = (err: any): [number, object] => {
     return [statusCode, json];
 }
 
+const matchingParams = (keys: string[], requiredKeys: string[]) => {
+    keys = keys.map(key => key.toLowerCase());
+
+    return (
+        requiredKeys.length === keys.length &&
+        keys.every((key) => requiredKeys.includes(key))
+    );
+}
+
+const isValidDate = (date : any) => {
+    try {
+        new Date(date);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+const isValidValues = (params : object) => {
+    return (
+        matchingParams(Object.keys(params), ['start_date', 'end_date', 'country', 'city']) &&
+        // @ts-ignore
+        isValidDate(params.start_date) && isValidDate(params.end_date) && typeof params.country === 'string' &&
+        // @ts-ignore
+        ['morocco', 'ghana'].includes(params.country) && typeof params.city === 'string'
+    );
+}
+
+export const availabilityQuery = (req: Request, res: Response, next: NextFunction) => {
+    const requiredKeys = ['start_date', 'end_date', 'country', 'city'];
+    const keys = Object.keys(req.query);
+    const isAvailabilityQuery = keys.some((key) => requiredKeys.includes(key));
+
+    if (!isAvailabilityQuery)
+        return next();
+
+    if (!isValidValues(req.query))
+        return res.status(400).json({
+            error: "Invalid query",
+            valid_query: "?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD&country=MOROCCO(or GHANA)&city=somecity",
+        })
+
+    req.query.availability = 'true';
+    next();
+}
+
 export const validateQuery = (req: Request, res: Response, next: NextFunction) => {
+    if (req.query.availability)
+        return next();
+
     const allowedKeys = {
         deleted: ['true', 'false'],
         role: ['owner', 'sitter', 'admin']
@@ -56,7 +105,6 @@ export const validateQuery = (req: Request, res: Response, next: NextFunction) =
             });
         }
     }
-
     next();
 };
 
@@ -81,5 +129,25 @@ export const ensureJsonContentType = (req: Request, res: Response, next: NextFun
     if (Array.isArray(req.body))
         return res.status(400).json({error: 'Only objects can be passed'});
 
+    next();
+};
+
+export const loginRegister = (req: Request, res: Response, next: NextFunction) => {
+    const allowedKeys = ['login', 'register'];
+    const key = Object.keys(req.query).map((key) => key.toLowerCase());
+
+    if (key.length > 1 || !allowedKeys.includes(key[0]))
+        return res.status(400).json({
+            error: 'Invalid query parameters.',
+            allowed: '?login or ?register'
+        });
+
+    if (key[0] === 'login') {
+        if (!matchingParams(Object.keys(req.body), ['email', 'password']))
+            return res.status(400).json({
+                error: 'Missing required data for login',
+                required: 'email and password'
+            });
+    }
     next();
 };
