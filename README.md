@@ -57,6 +57,6 @@ localhost:8081/api/v1/users // You can must specify either ?register to create a
 localhost:8081/api/v1/users/<user_id>/pets
 localhost:8081/api/v1/users/<user_id>/address
 ```
-To create a user, follow the format of the data in ./backend/src/data.json
-If any information is missing for the creation of any entity, the API will return valid json that will guide you to create the entity.
-For the option ?login, the email and password of the user must be specified. Make sure to get the information from ./backend/src/data.json to test.
+  - To create a user, follow the format of the data in ./backend/src/data.json
+  - If any information is missing for the creation of any entity, the API will return valid json that will guide you to create the entity.
+  - For the option ?login, the email and password of the user must be specified. Make sure to get the information from ./backend/src/data.json to test.
