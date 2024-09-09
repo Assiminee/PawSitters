@@ -2,6 +2,7 @@ import {Column, Entity, JoinColumn, ManyToOne} from "typeorm";
 import {IsNotEmpty, IsNumber, IsString, Max, Min} from "class-validator";
 import {BaseModel} from "./BaseModel";
 import {User} from "./User";
+import {Booking} from "./Booking";
 
 @Entity()
 export class Review extends BaseModel {
@@ -25,6 +26,13 @@ export class Review extends BaseModel {
     @IsNotEmpty()
     reviewer!: User;
 
+    @ManyToOne(
+        () => Booking,
+        (booking: Booking) => booking.reviews
+    )
+    @JoinColumn({name: "booking_id"})
+    booking!: Booking;
+
     @Column({
         type: "varchar",
         length: 255
@@ -39,4 +47,6 @@ export class Review extends BaseModel {
     @Min(1)
     @Max(5)
     rating!: number;
+
+
 }

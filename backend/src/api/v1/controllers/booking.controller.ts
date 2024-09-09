@@ -1,10 +1,12 @@
 import {BaseController} from "./base.controller";
 import {Booking} from "../../../orm/entities/Booking";
 import {User} from "../../../orm/entities/User";
-import {ConflictError, ForbiddenRequest, InvalidDataError, NotFoundError} from "../errors/Errors";
-import {LessThanOrEqual, MoreThanOrEqual} from "typeorm";
+import {AppError, ConflictError, ForbiddenRequest, InvalidDataError, NotFoundError} from "../errors/Errors";
+import {In, LessThanOrEqual, MoreThanOrEqual} from "typeorm";
 import {Pet} from "../../../orm/entities/Pet";
 import {UserController} from "./user.controller";
+import {Payment} from "../../../orm/entities/Payment";
+import {v4 as uuidV4} from 'uuid';
 
 export class BookingController extends BaseController<Booking> {
     constructor() {
@@ -19,15 +21,15 @@ export class BookingController extends BaseController<Booking> {
     private userExists:
         (id: string, role: string, user: User | null) => asserts user is User =
         (id: string, role: string, user: User | null) => {
-        if (!user || user.account_stat === "DELETED") {
-            throw new NotFoundError(
-                `${role} not found`,
-                { not_found: `Invalid user id ${id}` }
-            );
-        }
-    };
+            if (!user || user.account_stat === "DELETED") {
+                throw new NotFoundError(
+                    `${role} not found`,
+                    {not_found: `Invalid user id ${id}`}
+                );
+            }
+        };
 
-    private hasRequiredRole = (user : User, role : string, message : string) => {
+    private hasRequiredRole = (user: User, role: string, message: string) => {
         if (user.role.role !== role) {
             throw new ForbiddenRequest(
                 message,
@@ -36,7 +38,7 @@ export class BookingController extends BaseController<Booking> {
         }
     }
 
-    private isAdmin = (role : string) => {
+    private isAdmin = (role: string) => {
         if (role === "ADMIN") {
             throw new NotFoundError(
                 "Bookings not found",
@@ -45,18 +47,23 @@ export class BookingController extends BaseController<Booking> {
         }
     }
 
-    public createBooking = async (id: string, data: object) => {
-        const owner = await User.findOne({
-            where: {id: id},
-            relations: ['pets', 'role', 'bookings', 'address']
-        });
-
-        this.checkOwner(id, owner);
+    private checkBookingCreationData = (data: object) => {
         this.checkData(data);
+        this.checkDate(data, 'start_date');
+        this.checkDate(data, 'end_date');
 
-        // @ts-ignore
-        data.pets = await this.checkPets(owner, data.pets, data.start_date, data.end_date);
-        data = {...data, owner: owner};
+        if ('pets' in data && !this.isArrayOfValidStrings(data.pets))
+            this.appendInvalidData({pets: "Must be an array of valid pet ids (strings)"});
+        if ('sitter' in data && !(typeof data.sitter === 'string'))
+            this.appendInvalidData({sitter: "Must be a valid sitter id (string)"});
+
+        if (this.json.errors > 0)
+            throw new InvalidDataError("Couldn't create booking", this.json);
+    }
+
+    public createBooking = async (id: string, data: object) => {
+        const owner = await this.getOwner(id);
+        this.checkBookingCreationData(data);
 
         const sitter = await User.findOne({
             // @ts-ignore
@@ -65,19 +72,16 @@ export class BookingController extends BaseController<Booking> {
         });
 
         // @ts-ignore
-        this.checkSitter(data.sitter, sitter);
+        this.userExists(data.sitter, "Sitter", sitter);
+        this.hasRequiredRole(sitter, "SITTER", "Only pet sitters can be booked for a service");
         // @ts-ignore
         data.sitter = sitter;
-
-        this.checkDate(data, 'start_date');
-        this.checkDate(data, 'end_date');
-
         if (sitter?.sittings) {
-            const bookingConflict = await this.isSitterBookingConflict(
+            const bookingConflict = await this.userBookingConflicts(
                 // @ts-ignore
-                sitter.id, data.start_date, data.end_date
+                sitter.id, 'sitter', ["ACTIVE"], data.start_date, data.end_date
             );
-            if (bookingConflict) {
+            if (bookingConflict.length > 0) {
                 throw new ConflictError(
                     "Sitter already has bookings on the chosen dates",
                     {failed: "create", reason: "Booking dates conflict"}
@@ -85,57 +89,60 @@ export class BookingController extends BaseController<Booking> {
             }
         }
 
+        // @ts-ignore
+        data.pets = await this.checkPets(owner, data.pets, data.start_date, data.end_date);
+        data = {...data, owner: owner};
+
         const newBooking = this.repository.create(data);
         await this.propertyValidation(newBooking, "Couldn't create booking");
         return await this.repository.save(newBooking);
     }
 
-    private isPetBookingConflict = async (petId: string, start: Date, end: Date) => {
-        const conflicts = await this.repository
+    private petConflicts = async (petId: string, statuses: string[], start: Date, end: Date) => {
+        return await this.repository
             .createQueryBuilder("booking")
             .leftJoin("booking.pets", "pet")
             .where("pet.id = :petId", {petId})
-            .andWhere("booking.status = :status", {status: "ACTIVE"})
+            .andWhere("booking.status IN (:...statuses)", {statuses})
             .andWhere("booking.start_date <= :endDate", {endDate: end})
             .andWhere("booking.end_date >= :startDate", {startDate: start})
             .getMany();
-
-        return conflicts.length > 0;
     }
 
 
-    public isSitterBookingConflict = async (id: string, start: Date, end: Date) => {
-        const conflicts = await this.repository.find({
+    public userBookingConflicts = async (id: string, user: string, statuses: string[], start: Date, end: Date) => {
+        return this.repository.find({
             where: {
-                sitter: {id: id},
-                status: "ACTIVE",
+                [user]: {id: id},
+                status: In(statuses),
                 start_date: LessThanOrEqual(end),
                 end_date: MoreThanOrEqual(start),
             },
         });
-        return conflicts.length > 0;
     }
 
-    private checkSitter = (id: string, sitter: User | null) => {
-        this.userExists(id, "Sitter", sitter);
-        this.hasRequiredRole(
-            sitter, "SITTER",
-            "A user can only book the services of a user with the role 'SITTER'"
-            );
-    }
+    private getOwner = async (id: string) => {
+        const owner = await User.findOne({
+            where: {id: id},
+            relations: ['pets', 'role', 'bookings', 'address']
+        });
 
-    private checkOwner = (id: string, owner: User | null) => {
-        this.userExists(id, "Owner", owner);
-        this.hasRequiredRole(
-            owner, "OWNER",
-            "Only users with the role 'OWNER' can request a service"
+        if (!owner || owner.account_stat === "DELETED") {
+            throw new NotFoundError(
+                `Owner not found`,
+                {not_found: `Invalid user id ${id}`}
             );
+        }
+
+        this.hasRequiredRole(owner, "OWNER", "Only pet owners can book services")
 
         if (!owner.pets || owner.pets.length === 0)
             throw new ConflictError(
                 "Owner doesn't have the necessary data to book the service",
                 {failed: "create", reason: "Owner has no pets"}
             );
+
+        return owner;
     }
 
     private checkPets = async (owner: User, pet_ids: string[], start: Date, end: Date) => {
@@ -149,8 +156,8 @@ export class BookingController extends BaseController<Booking> {
                 invalidPetIds.push(pet_id);
                 continue;
             }
-            const booked = await this.isPetBookingConflict(pet_id, start, end)
-            if (booked) {
+            const booked = await this.petConflicts(pet_id, ["ACTIVE"], start, end)
+            if (booked.length > 0) {
                 bookedPets.push(pet_id);
                 continue;
             }
@@ -160,14 +167,14 @@ export class BookingController extends BaseController<Booking> {
         if (invalidPetIds.length > 0) {
             throw new NotFoundError(
                 "Invalid pet id(s)",
-                {failed: "create", reason: invalidPetIds},
+                {failed: "create", invalid_ids: invalidPetIds},
             );
         }
 
         if (bookedPets.length > 0) {
             throw new ConflictError(
                 "User has already booked sitting services for pets",
-                {failed: "create", reason: bookedPets},
+                {failed: "create", booked_pets: bookedPets},
             );
         }
 
@@ -187,15 +194,15 @@ export class BookingController extends BaseController<Booking> {
         const root = role === "SITTER" ? "sittings" : "bookings";
 
         const userWithBookings = await userController.getEntityById(
-            id, [root, `${root}.payment`, `${root}.pets`, `${root}.owner`, `${root}.sitter`]
+            id, [root, `${root}.payment`, `${root}.pets`, `${root}.owner`, `${root}.sitter`, `${root}.reviews`]
         );
         return userWithBookings[root];
     }
 
-    public getBooking = async (user_id : string, booking_id : string) => {
+    public getBooking = async (user_id: string, booking_id: string) => {
         const user = await User.findOne({
-            where : {id : user_id},
-            select : ['id', 'role'],
+            where: {id: user_id},
+            select: ['id', 'role'],
             relations: ['role']
         });
         this.userExists(user_id, "Owner/sitter", user);
@@ -205,14 +212,14 @@ export class BookingController extends BaseController<Booking> {
 
         const where = {
             id: booking_id,
-            [role.toLowerCase()] : {id : user_id}
+            [role.toLowerCase()]: {id: user_id}
         };
 
         const booking = await Booking.findOne(
             {
-                where : where,
+                where: where,
                 relations: [
-                    'payment', 'pets', 'owner', 'sitter'
+                    'payment', 'pets', 'owner', 'sitter', 'reviews'
                 ]
             });
 
@@ -226,39 +233,172 @@ export class BookingController extends BaseController<Booking> {
         return booking;
     }
 
-    public editBooking = async (
-        user_id : string, booking_id : string,
-        data : object, userController : UserController
-    ) => {
-        const bookings = await this.getBookings(user_id, userController);
-        const booking = bookings.find(booking => booking.id === booking_id);
+    private statusUpdateException = (condition: boolean, message: string) => {
+        if (condition)
+            throw new ForbiddenRequest(
+                "Couldn't update booking",
+                {failed: 'update', reason: message}
+            );
+    }
 
-        if (!booking) {
-            throw new NotFoundError(
-                "Bookings not found",
-                {not_found: `Invalid booking id ${booking_id}`}
+    private sitterBookingLogic = async (status: string, booking: Booking) => {
+        const allowedStatuses = ['ACCEPTED', 'REJECTED', 'CANCELLED', 'COMPLETED'];
+        this.statusUpdateException(
+            !allowedStatuses.includes(status),
+            `A pet sitter can only set the status to ${allowedStatuses.join(', ')}`
+        );
+
+        if (status === 'COMPLETED') {
+            this.statusUpdateException(
+                booking.status !== 'ACTIVE',
+                "Only active bookings can be marked 'COMPLETED'"
+            );
+            this.statusUpdateException(
+                this.dateCompare(booking.end_date) < 0,
+                "An active booking can only be marked 'COMPLETED' after the end date"
+            );
+        } else if (status === 'ACCEPTED' || status === 'REJECTED') {
+            this.statusUpdateException(
+                booking.status !== "PENDING",
+                "Only pending bookings can be accepted/rejected"
+            );
+            if (status === "ACCEPTED") {
+                const conflicts = await this.userBookingConflicts(booking.sitter.id, 'sitter', ["ACTIVE"], booking.start_date, booking.end_date);
+                if (conflicts.length > 0) {
+                    booking.status = "CANCELLED";
+                    await this.repository.save(booking);
+                    this.statusUpdateException(conflicts.length > 0, "The sitter already has bookings on the desired dates");
+                }
+                for (const pet of booking.pets) {
+                    const bookings = await this.petConflicts(pet.id, ["ACTIVE"], booking.start_date, booking.end_date);
+                    if (bookings.length > 0) {
+                        booking.status = "CANCELLED"
+                        await this.repository.save(booking);
+                        this.statusUpdateException(bookings.length > 0, "Some pets in the booking have active bookings");
+                    }
+                }
+            }
+        } else if (status === "CANCELLED") {
+            this.statusUpdateException(!["ACCEPTED", "ACTIVE"].includes(booking.status), "Only accepted or active bookings can be cancelled");
+            if (booking.payment)
+                await Payment.remove(booking.payment);
+        }
+    }
+
+    public editBooking = async (user_id: string, booking_id: string, status: string) => {
+        const booking = await this.getBooking(user_id, booking_id);
+
+        this.statusUpdateException(
+            ['REJECTED', 'CANCELLED', 'COMPLETED'].includes(booking.status),
+            "A booking that's been 'rejected', 'cancelled', or 'completed' is not updatable"
+        );
+
+        const userRole = booking.owner.id === user_id ? "OWNER" : "SITTER";
+        if (userRole === "SITTER") {
+            await this.sitterBookingLogic(status, booking);
+        } else {
+            this.statusUpdateException(
+                status !== "CANCELLED", "A pet owner can only set a booking's status to 'cancelled'."
+            );
+            if (booking.payment && this.dateCompare(booking.start_date) >= 1)
+                await Payment.remove(booking.payment);
+        }
+        booking.status = status;
+        return this.repository.save(booking);
+    }
+
+    private dateCompare = (date1: Date, date2: Date | null = null) => {
+        if (!date2) {
+            date2 = new Date();
+            date2.setHours(0, 0, 0, 0);
+        }
+        const diffInMilliseconds = date1.getTime() - date2.getTime();
+
+        const millisecondsPerDay = 1000 * 60 * 60 * 24;
+        return diffInMilliseconds / millisecondsPerDay;
+    }
+
+    public deleteBooking = async (user_id: string, booking_id: string) => {
+        const booking = await this.getBooking(user_id, booking_id);
+        if (["CANCELLED", "PENDING"].includes(booking.status)) {
+            if (booking.payment) {
+                await Payment.remove(booking.payment);
+                const paymentExists = await Payment.existsBy({id: booking.payment.id});
+                this.deleteFailed(paymentExists, "payment");
+            }
+            await this.repository.remove(booking);
+            const exists = await this.repository.existsBy({id: booking_id});
+            this.deleteFailed(exists, "booking");
+            return;
+        }
+        throw new ForbiddenRequest("Can't delete booking", {
+            failed: "delete",
+            reason: "Only bookings that are pending for confirmation, or that have been cancelled, can be deleted"
+        })
+    }
+
+    private deleteFailed = (exists: boolean, entity: string) => {
+        if (exists)
+            throw new AppError(
+                `Failed to delete ${entity}`, 500,
+                {failed: "delete", reason: "Unknown"}
+            );
+    }
+
+    public addPayment = async (user_id: string, booking_id: string) => {
+        const booking = await this.getBooking(user_id, booking_id);
+
+        if (booking.sitter.id === user_id) {
+            throw new ForbiddenRequest(
+                "Could not create payment",
+                {failed : 'create', reason: "Only owners can issue payments for services"}
             );
         }
 
-        if (!this.validStatus(data))
-            throw new InvalidDataError(
-                "A booking's status can either be set to cancelled or completed",
-                {}
-                );
+        if (booking.status !== 'ACCEPTED') {
+            const msg = booking.status === "ACTIVE" ? "is already" : "had been";
+            throw new ForbiddenRequest(
+                "Could not issue payment",
+                {failed : 'create', reason: `This booking ${msg} '${booking.status}'`}
+            );
+        }
 
-        if ('cancelled' in data)
-            booking.status = "CANCELLED";
-        else
-            booking.status = "COMPLETED";
+        if (booking.payment) {
+            throw new ConflictError("Couldn't create payment", {
+                failed: "create", reason: "A payment has already been issued for this booking"
+            });
+        }
 
-        return await this.repository.save(booking);
+        if (!booking.sitter.fee) {
+            throw new ConflictError("Couldn't create payment", {
+                failed: "create", reason: "A payment cannot be issued to a sitter that hasn't set a service fee"
+            });
+        }
+
+        const amount = this.dateCompare(booking.end_date, booking.start_date) * booking.sitter.fee * booking.pets.length;
+        const transaction_id = uuidV4();
+        booking.payment = Payment.create({amount: amount, transaction_id: transaction_id});
+        booking.status = "ACTIVE";
+        await this.cancelAllConflictingBookings(booking);
+        return this.repository.save(booking);
     }
 
-    private validStatus = (data : object) => {
-        return (
-            Object.keys(data).length === 1 && 'status' in data &&
-            typeof data.status === 'string' &&
-            ['CANCELLED', 'COMPLETED'].includes(data.status.toUpperCase())
-        )
+    private cancelAllConflictingBookings = async (booking: Booking) => {
+        const conflictingBookings = await this.userBookingConflicts(
+            booking.sitter.id, 'sitter',
+            ["PENDING", "ACCEPTED"],
+            booking.start_date, booking.end_date
+        );
+        for (const pet of booking.pets) {
+            const conflicts = await this.petConflicts(
+                pet.id, ['PENDING', 'ACCEPTED'],
+                booking.start_date, booking.end_date
+            );
+            conflictingBookings.push(...conflicts);
+        }
+        for (const conflict of conflictingBookings) {
+            conflict.status = "CANCELLED";
+            await this.repository.save(conflict);
+        }
     }
 }

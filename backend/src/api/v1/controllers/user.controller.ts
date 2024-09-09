@@ -83,6 +83,7 @@ export class UserController extends BaseController<User> {
             address && address.city === params.city && address.country === params.country.toUpperCase()
         )
     }
+
     public getAvailableSitters = async (params : object) => {
         this.checkDate(params, 'start_date');
         this.checkDate(params, 'end_date');
@@ -94,11 +95,11 @@ export class UserController extends BaseController<User> {
             if (!this.isValidLocation(user.address, params))
                 continue;
 
-            const bookingConflict = await bookingController.isSitterBookingConflict(
+            const bookingConflict = await bookingController.userBookingConflicts(
                 // @ts-ignore
-                user.id, params.start_date, params.end_date
+                user.id, 'sitter', ["ACTIVE"], params.start_date, params.end_date
             );
-            if (!bookingConflict)
+            if (bookingConflict.length === 0)
                 availableSitters.push(user);
         }
         return availableSitters;
@@ -173,11 +174,6 @@ export class UserController extends BaseController<User> {
     private checkGender = (data: object) => {
         if ('gender' in data && typeof data.gender === 'string')
             data.gender = data.gender.toUpperCase();
-    }
-
-    private isArrayOfValidStrings = (arr: any) => {
-        return Array.isArray(arr) && arr.length > 0 &&
-            arr.every(item => (typeof item === 'string' && item.length > 0));
     }
 
     private setRole = async (data: object) => {

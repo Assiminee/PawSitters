@@ -56,6 +56,11 @@ export class BaseController<T extends ObjectLiteral> {
         };
     }
 
+    protected isArrayOfValidStrings = (arr: any) => {
+        return Array.isArray(arr) && arr.length > 0 &&
+            arr.every(item => (typeof item === 'string' && item.length > 0));
+    }
+
     protected updateProperties = (entity: BaseModel, data: object) => {
         for (const [key, value] of Object.entries(data))
             entity[key] = value;
@@ -70,11 +75,13 @@ export class BaseController<T extends ObjectLiteral> {
         if (!(key in data))
             return;
 
-        try {
-            (data as any)[key] = (new Date((data as any)[key] as string));
-        } catch (err) {
-            this.appendInvalidData({[key]: `Invalid date format: ${(data as any)[key]}`})
-        }
+        const dateString = (data as any)[key] as string;
+        const date = new Date(dateString);
+
+        if (isNaN(date.getTime()))
+            this.appendInvalidData({[key]: `Invalid date format: ${dateString}` });
+        else
+            (data as any)[key] = date;
     }
 
     appendInvalidData = (error: object) => {
@@ -141,6 +148,7 @@ export class BaseController<T extends ObjectLiteral> {
             .filter((col) => !(col in data));
 
         if (missingColumns.length > 0) {
+            this.json.errors++;
             this.json.missing_columns = [
                 ...this.json.missing_columns,
                 ...missingColumns

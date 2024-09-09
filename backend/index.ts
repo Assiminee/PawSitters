@@ -16,7 +16,7 @@ const main = async () => {
 
         appRouter.listen(PORT, () => {
             console.log(`Listening on port ${PORT}`);
-            createUsers();
+            // createUsers();
         });
     } catch (err) {
         console.error(err);
