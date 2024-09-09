@@ -1,0 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.badge {
+    @apply absolute bg-gray-300 text-gray-600 text-xs uppercase font-semibold rounded-full p-2 top-0 ml-2 mt-2 bg-opacity-80;
+}
+
+.card {
+    @apply relative bg-white rounded overflow-hidden;
+}
+.card:hover {
+    box-shadow: 0 0 12px 0 rgba(0, 0, 0, .12);
+    transform: scale(1.015);
+}
+
+.card-all {
+    width: calc(25% - 4px);
+    @apply mb-1;
+}
+
+.wrapper {
+    max-width: 940px;
+    @apply relative w-full px-1 border-b border-gray-200;
+}
+
+.card-wrapper {
+    grid-auto-columns: 235px;
+    @apply grid grid-flow-col overflow-x-auto gap-1 py-1;
+}
+
+.card-wrapper::-webkit-scrollbar {
+    width: 0%;
+}
