@@ -48,27 +48,27 @@ function SignUp({open, setOpen}: SignUpProp) {
                 <form action="POST">
                   <div className='bg-primary border-b border-white px-2 py-1 '>
                     <label htmlFor="first_name" className='block text-xs text-gray-600 font-semibold'>First Name</label>
-                    <input type="text" id='first_name' className='signup_fields'/>
+                    <input type="text" id='first_name' className='signup_fields' required={true}/>
                   </div>
                   <div className='bg-primary border-b border-white px-2 py-1'>
                     <label htmlFor="last_name" className='block text-xs text-gray-600 font-semibold'>Last Name</label>
-                    <input type="text" id='last_name' className='signup_fields'/>
+                    <input type="text" id='last_name' className='signup_fields' required={true}/>
                   </div>
                   <div className='bg-primary border-b border-white px-2 py-1'>
                     <label htmlFor="email" className='block text-xs text-gray-600 font-semibold'>Email Address</label>
-                    <input type="email" id='email' className='signup_fields'/>
+                    <input type="email" id='email' className='signup_fields' required={true}/>
                   </div>
                   <div className='bg-primary border-b border-white px-2 py-1'>
                     <label htmlFor="dob" className='block text-xs text-gray-600 font-semibold'>Date of Birth</label>
-                    <input type="date" id='dob' className='signup_fields'/>
+                    <input type="date" id='dob' className='signup_fields' required={true}/>
                   </div>
                   <div className='bg-primary border-b border-white px-2 py-1'>
                     <label htmlFor="pass1" className='block text-xs text-gray-600 font-semibold'>Password</label>
-                    <input type="password" id='pass1' className='signup_fields'/>
+                    <input type="password" id='pass1' className='signup_fields' required={true}/>
                   </div>
                   <div className='bg-primary border-b border-white px-2 py-1'>
                     <label htmlFor="pass2" className='block text-xs text-gray-600 font-semibold'>Confirm Password</label>
-                    <input type="password" id='pass2' className='signup_fields'/>
+                    <input type="password" id='pass2' className='signup_fields' required={true}/>
                   </div>
                 </form>
               </div>
