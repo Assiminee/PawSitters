@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "nodemon --watch './**/*.ts' --exec ts-node index.ts",
+    "dev": "nodemon --watch './**/*.ts' --exec ts-node src/index.ts",
     "typeorm": "typeorm-ts-node-commonjs",
     "create-migration": "npm run build && typeorm migration:generate ./dist/orm/migrations/UserPetMods -d ./dist/orm/data-source.js",
     "migration": "typeorm migration:run -d ./dist/orm/data-source.js",

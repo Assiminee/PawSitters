@@ -3,7 +3,9 @@ import {Species} from "../../../orm/entities/Species";
 
 export class SpeciesController extends BaseController<Species> {
     constructor() {
-        super(Species, ['name']);
+        super(Species);
+        this.entityColumns.required_columns = ['name'];
+        this.entityColumns.unique_columns = ['name'];
     }
 
     public createSpecies = async (data : object) => {

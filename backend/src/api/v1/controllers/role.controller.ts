@@ -3,7 +3,9 @@ import {Role, Roles} from "../../../orm/entities/Role";
 
 export class RoleController extends BaseController<Role> {
     constructor() {
-        super(Role, ['role']);
+        super(Role);
+        this.entityColumns.required_columns = ['role'];
+        this.entityColumns.unique_columns = ['role'];
     }
 
     createRole = async (data: object) => {

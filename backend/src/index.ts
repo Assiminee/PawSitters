@@ -1,5 +1,5 @@
-import {AppDataSource} from "./src/orm/data-source";
-import {createUsers} from "./src/init_users";
+import {AppDataSource} from "./orm/data-source";
+import {createUsers} from "./init_users";
 
 const PORT = process.env.SERVER_PORT || 8081;
 
@@ -8,11 +8,11 @@ const main = async () => {
         await AppDataSource.initialize();
         console.log("Database initialized");
 
-        const { init } = await import("./src/data_initialization");
+        const { init } = await import("./data_initialization");
 
         await init();
 
-        const { default: appRouter } = await import("./src/api/v1/routes/app.router");
+        const { default: appRouter } = await import("./api/v1/routes/app.router");
 
         appRouter.listen(PORT, () => {
             console.log(`Listening on port ${PORT}`);
