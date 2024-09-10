@@ -1,7 +1,7 @@
 import {BeforeInsert, BeforeUpdate, Column, Entity, JoinColumn, OneToOne} from "typeorm";
 import {BaseModel} from "./BaseModel";
 import {User} from "./User";
-import {IsEnum, IsNotEmpty, IsNumber, IsNumberString, IsOptional, IsString} from "class-validator";
+import {IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString} from "class-validator";
 
 export enum Country {
     GH = "GHANA",

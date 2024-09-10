@@ -16,6 +16,20 @@ export class AddressController extends BaseController<Address> {
         this.entityColumns.updatable_columns = this.entityColumns.allowed_columns;
     }
 
+    public getAddressData = (address: Address) => {
+        return {
+            id: address.id,
+            building_num: address.building_num,
+            street: address.street,
+            apartment_num: address.apartment_num,
+            floor: address.floor,
+            city: address.city,
+            country: address.country,
+            postal_code: address.postal_code,
+            user: address.user.getMinimalInfo(),
+        }
+    }
+
     private checkUser = (data : object) => {
         if (!('user' in data))
             return;
@@ -40,7 +54,7 @@ export class AddressController extends BaseController<Address> {
         newAddress.user = user;
         await this.propertyValidation(newAddress, 'Could not create address');
 
-        return await this.repository.save(newAddress);
+        return await this.repository.save(this.getAddressData(newAddress));
     }
 
     public updateAddress = async (user : User, data : object) => {
@@ -59,7 +73,7 @@ export class AddressController extends BaseController<Address> {
         this.updateProperties(user.address, data);
         await this.propertyValidation(user.address, 'Could not update address');
 
-        return await this.repository.save(user.address);
+        return await this.repository.save(this.getAddressData(user.address));
     }
 
     public deleteAddress = async (user : User) => {
