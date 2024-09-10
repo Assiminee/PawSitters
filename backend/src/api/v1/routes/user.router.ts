@@ -11,6 +11,7 @@ import {UserController} from "../controllers/user.controller";
 import addressRouter from "./address.router";
 import bookingRouter from "./booking.router";
 import {User} from "../../../orm/entities/User";
+import certificationRouter from "./certification.router";
 
 const userRouter = Router();
 userRouter.use(normalizeQueryParams);
@@ -85,6 +86,7 @@ userRouter.delete('/:user_id', async (req, res) => {
 userRouter.use('/:user_id/pets', petRouter);
 userRouter.use('/:user_id/address', addressRouter);
 userRouter.use('/:user_id/bookings', bookingRouter);
+userRouter.use('/:user_id/certifications', certificationRouter);
 
 export default userRouter;
 

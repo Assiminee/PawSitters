@@ -1,15 +1,16 @@
 import {Router} from 'express';
 import {
+    bookingQuery,
     ensureJsonContentType,
     resData, validateBody
 } from "./helperFunctions";
 import {UserController} from "../controllers/user.controller";
 import {BookingController} from "../controllers/booking.controller";
-import {User} from "../../../orm/entities/User";
-import {Booking} from "../../../orm/entities/Booking";
+import {ReviewController} from "../controllers/review.controller";
 
 type UserParam = { user_id: string };
-type MergedParams = UserParam & { booking_id: string };
+type UserBookingParams = UserParam & { booking_id: string };
+type reviewParams = UserBookingParams & { review_id: string };
 
 const bookingRouter = Router({mergeParams: true});
 
@@ -27,7 +28,7 @@ bookingRouter.get<'/', UserParam>('/', async (req, res) => {
     }
 )
 
-bookingRouter.get<'/:booking_id', MergedParams>('/:booking_id', async (req, res) => {
+bookingRouter.get<'/:booking_id', UserBookingParams>('/:booking_id', async (req, res) => {
     try {
         const user_id = req.params.user_id;
         const booking_id = req.params.booking_id;
@@ -55,12 +56,13 @@ bookingRouter.post<'/', UserParam>('/', ensureJsonContentType, async (req, res) 
 
 });
 
-bookingRouter.put<'/:payment_id', MergedParams>('/:payment_id', ensureJsonContentType, async (req, res) => {
+bookingRouter.put<'/:booking_id', UserBookingParams>('/:booking_id', bookingQuery, async (req, res) => {
     try {
         const user_id = req.params.user_id;
         const booking_id = req.params.booking_id;
+        const status= req.query.status as string;
         const booking = await (new BookingController())
-            .editBooking(user_id, booking_id, validateBody({...req.body}), (new UserController()));
+            .editBooking(user_id, booking_id, status);
 
         res.status(200).json(booking);
     } catch (err) {
@@ -68,31 +70,82 @@ bookingRouter.put<'/:payment_id', MergedParams>('/:payment_id', ensureJsonConten
         res.status(code).json(json);
     }
 })
-//
-// userRouter.put('/:user_id', ensureJsonContentType, async (req, res) => {
-//     try {
-//         const user = await (new UserController()).editUser(
-//             req.params.user_id, validateBody({...req.body})
-//         );
-//         res.status(200).json(user);
-//     } catch (err) {
-//         const [code, json] = resData(err);
-//         res.status(code).json(json);
-//     }
-// });
-//
-// userRouter.delete('/:user_id', async (req, res) => {
-//     try {
-//         await (new UserController()).deleteUser(req.params.user_id);
-//         res.status(204).send();
-//     } catch (err) {
-//         const [code, json] = resData(err);
-//         res.status(code).json(json);
-//     }
-// });
-//
-// userRouter.use('/:user_id/pets', petRouter);
-// userRouter.use('/:user_id/address', addressRouter);
+
+bookingRouter.delete<'/:booking_id', UserBookingParams>('/:booking_id', async (req, res) => {
+    try {
+        await (new BookingController()).deleteBooking(req.params.user_id, req.params.booking_id);
+        res.status(204).json();
+    } catch (err) {
+        const [code, json] = resData(err);
+        res.status(code).json(json);
+    }
+});
+
+bookingRouter.post<'/:booking_id/payment', UserBookingParams>('/:booking_id/payment', async (req, res) => {
+    try {
+        const booking = await (new BookingController())
+            .addPayment(req.params.user_id, req.params.booking_id);
+
+        res.status(200).json(booking.payment);
+    } catch (err) {
+        const [code, json] = resData(err);
+        res.status(code).json(json);
+    }
+});
+
+bookingRouter.get<'/:booking_id/payment', UserBookingParams>('/:booking_id/payment', async (req, res) => {
+    try {
+        const booking = await (new BookingController())
+            .getBooking(req.params.user_id, req.params.booking_id);
+
+        res.status(200).json(booking.payment ?? {});
+    } catch (err) {
+        const [code, json] = resData(err);
+        res.status(code).json(json);
+    }
+});
+
+bookingRouter.post<'/:booking_id/reviews', UserBookingParams>('/:booking_id/reviews', async (req, res) => {
+    try {
+        const review = await (new ReviewController())
+            .createReview(req.params.user_id, req.params.booking_id, validateBody({...req.body}));
+
+        res.status(200).json(review);
+    } catch (err) {
+        const [code, json] = resData(err);
+        res.status(code).json(json);
+    }
+});
+
+bookingRouter.get<'/:booking_id/reviews', UserBookingParams>('/:booking_id/reviews', async (req, res) => {
+    try {
+        const booking = await (new BookingController())
+            .getBooking(req.params.user_id, req.params.booking_id);
+
+        res.status(200).json(booking.reviews ?? {});
+    } catch (err) {
+        const [code, json] = resData(err);
+        res.status(code).json(json);
+    }
+});
+
+bookingRouter.get<'/:booking_id/reviews/:review_id', reviewParams>('/:booking_id/reviews/:review_id', async (req, res) => {
+    try {
+        const booking = await (new BookingController())
+            .getBooking(req.params.user_id, req.params.booking_id);
+
+        const review = booking.reviews.find(review => review.id === req.params.review_id);
+        if (!review) {
+            res.status(404).json({not_found: `Invalid id ${req.params.review_id}`});
+            return;
+        }
+
+        res.status(200).json(review);
+    } catch (err) {
+        const [code, json] = resData(err);
+        res.status(code).json(json);
+    }
+});
 
 export default bookingRouter;
 

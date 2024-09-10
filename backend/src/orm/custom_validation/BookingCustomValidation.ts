@@ -1,36 +1,48 @@
 import {ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface} from "class-validator";
 import {Booking} from "../entities/Booking";
+import {User} from "../entities/User";
 
 @ValidatorConstraint({ name: 'hasOwnerRole', async: false })
 export class HasOwnerRole implements ValidatorConstraintInterface {
     validate(owner: any | null, args: ValidationArguments) {
-        return owner && owner.role.role === 'OWNER'
+        return owner && owner instanceof User && owner.role.role === 'OWNER'
     }
 
     defaultMessage(args: ValidationArguments) {
-        return "Must have role 'OWNER'";
+        return "Must a user with an 'OWNER' role";
     }
 }
 
 @ValidatorConstraint({ name: 'hasSitterRole', async: false })
 export class HasSitterRole implements ValidatorConstraintInterface {
     validate(sitter: any | null, args: ValidationArguments) {
-        return sitter && sitter.role.role === 'SITTER'
+        return sitter && sitter instanceof User && sitter.role.role === 'SITTER'
     }
 
     defaultMessage(args: ValidationArguments) {
-        return "Must have role 'SITTER'";
+        return "Must be a user with a 'SITTER' role";
     }
 }
 
 @ValidatorConstraint({ name: 'hasBankAccountNumber', async: false })
 export class HasBankAccountNumber implements ValidatorConstraintInterface {
     validate(user: any | null, args: ValidationArguments) {
-        return user && user.bank_account_number;
+        return user && user instanceof User && user.bank_account_number;
     }
 
     defaultMessage(args: ValidationArguments) {
         return "Must have a bank account number";
+    }
+}
+
+@ValidatorConstraint({ name: 'hasFeeSpecified', async: false })
+export class HasFeeSpecified implements ValidatorConstraintInterface {
+    validate(user: any | null, args: ValidationArguments) {
+        return user && user instanceof User && user.fee;
+    }
+
+    defaultMessage(args: ValidationArguments) {
+        return "Must have a fee specified";
     }
 }
 
@@ -39,7 +51,10 @@ export class InSameCityCountry implements ValidatorConstraintInterface {
     validate(sitter: any | null, args: ValidationArguments) {
         const booking : Booking = args.object as Booking;
         const owner = booking.owner;
+
         return (
+            sitter && sitter instanceof User &&
+            owner && owner instanceof User &&
             owner.address && sitter.address &&
             owner.address.city === sitter.address.city &&
             owner.address.country === sitter.address.country

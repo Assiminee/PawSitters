@@ -33,10 +33,9 @@ export class PetController extends BaseController<Pet> {
             temperament: pet.temperament,
             description: pet.description,
             status: pet.status,
-            owner: `${pet.user.fname} ${pet.user.lname}`,
-            owner_id: pet.user.id,
-            breed: pet.breed.name,
-            breed_id: pet.breed.id
+            image_path: pet.image_path,
+            owner: pet.user.getMinimalInfo(),
+            breed: pet.breed.getMinimalInfo()
         };
     }
 
@@ -57,7 +56,7 @@ export class PetController extends BaseController<Pet> {
 
     public findPets = async (user_id : string) => {
         const user = await (new UserController())
-            .getEntityById(user_id, ['pets', 'pets.breed', 'pets.user', 'role']);
+            .getEntityById(user_id, ['pets', 'pets.breed', 'pets.breed.species', 'pets.user', 'role']);
 
         if (user.role.role !== "OWNER")
             throw new NotFoundError(
@@ -76,7 +75,7 @@ export class PetController extends BaseController<Pet> {
                 id : pet_id,
                 user : { id : user_id }
             },
-            relations : ['user', 'breed']
+            relations : ['user', 'breed', 'breed.species']
         });
         return this.getPetData(pet);
     }

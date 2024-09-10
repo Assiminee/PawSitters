@@ -48,10 +48,9 @@ export interface PetData {
     temperament: string,
     description: string,
     status: string,
-    owner: string,
-    owner_id: string,
-    breed: string,
-    breed_id: string
+    image_path?: string | null,
+    owner: object,
+    breed: object,
 }
 
 @Entity()

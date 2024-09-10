@@ -41,20 +41,37 @@ const matchingParams = (keys: string[], requiredKeys: string[]) => {
     );
 }
 
-const isValidDate = (date : any) => {
-    try {
-        new Date(date);
-        return true;
-    } catch {
+const isValidDate = (date: Date | string): Date | null => {
+    const parsedDate = new Date(date);
+    return isNaN(parsedDate.getTime()) ? null : parsedDate;
+}
+
+const validInterval = (start_date: Date | string, end_date: Date | string): boolean => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const validStartDate = isValidDate(start_date);
+    const validEndDate = isValidDate(end_date);
+
+    if (!validStartDate || !validEndDate) {
         return false;
     }
+
+    const millisecondsPerDay = 1000 * 60 * 60 * 24;
+
+    const startIsInFuture = (validStartDate.getTime() - today.getTime()) / millisecondsPerDay >= 1;
+
+    const validInterval = (validEndDate.getTime() - validStartDate.getTime()) / millisecondsPerDay >= 1;
+
+    return startIsInFuture && validInterval;
 }
+
 
 const isValidValues = (params : object) => {
     return (
         matchingParams(Object.keys(params), ['start_date', 'end_date', 'country', 'city']) &&
         // @ts-ignore
-        isValidDate(params.start_date) && isValidDate(params.end_date) && typeof params.country === 'string' &&
+        validInterval(params.start_date, params.end_date) && typeof params.country === 'string' &&
         // @ts-ignore
         ['morocco', 'ghana'].includes(params.country) && typeof params.city === 'string'
     );
@@ -149,5 +166,18 @@ export const loginRegister = (req: Request, res: Response, next: NextFunction) =
                 required: 'email and password'
             });
     }
+    next();
+};
+
+export const bookingQuery = (req: Request, res: Response, next: NextFunction) => {
+    const allowedKeys = ['ACCEPTED', 'REJECTED', 'CANCELLED'];
+    const key = Object.keys(req.query).map((key) => key.toUpperCase());
+
+    if (key.length > 1 || !allowedKeys.includes(key[0]))
+        return res.status(400).json({
+            error: 'Invalid query parameters.',
+            allowed: '?accepted, ?rejected or ?cancelled'
+        });
+    req.query.status = key[0];
     next();
 };

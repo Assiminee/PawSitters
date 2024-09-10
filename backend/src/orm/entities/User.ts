@@ -225,4 +225,23 @@ export class User extends BaseModel {
         if (this.password)
             this.password = await bcrypt.hash(this.password, 10);
     }
+
+    dateToString() {
+        return (
+            this.birthday.getFullYear() + '-' + this.birthday.getMonth() + '-' + this.birthday.getDay()
+        );
+    }
+
+    getMinimalInfo() {
+        return {
+            id: this.id,
+            fname: this.fname,
+            lname: this.lname,
+            email: this.email,
+            phone: this.phone,
+            gender: this.gender,
+            birthday: this.birthday,
+            account_stat: this.account_stat
+        }
+    }
 }

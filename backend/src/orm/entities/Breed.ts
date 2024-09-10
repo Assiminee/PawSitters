@@ -32,4 +32,15 @@ export class Breed extends BaseModel {
     normalize() {
         this.name = this.name.toLowerCase();
     }
+
+    getMinimalInfo() {
+        return {
+            id: this.id,
+            name: this.name,
+            species: {
+                id: this.species.id,
+                name: this.species.name
+            }
+        }
+    }
 }
