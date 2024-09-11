@@ -100,7 +100,10 @@ export class PetController extends BaseController<Pet> {
                 {not_found: data.breed}
             );
 
-        const breed = await Breed.findOne({where: {name: data.breed}});
+        const breed = await Breed.findOne({
+            where: {name: data.breed},
+            relations: ['species']
+        });
 
         if (!breed)
             throw new NotFoundError(
@@ -151,7 +154,7 @@ export class PetController extends BaseController<Pet> {
                 id : pet_id,
                 user : { id : user_id }
             },
-            relations : ['user', 'user.role', 'user.pets', 'breed']
+            relations : ['user', 'user.role', 'user.pets', 'breed', 'breed.species']
         });
 
         this.forbiddenUpdate(data);
