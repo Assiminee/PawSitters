@@ -1,4 +1,6 @@
-import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
+import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
+import React, { useState } from 'react';
+import SignUpInputs from './sign_up_inputs';
 
 interface SignUpProp {
     open: boolean;
@@ -6,6 +8,129 @@ interface SignUpProp {
 }
 
 function SignUp({open, setOpen}: SignUpProp) {
+
+  type FormValues = {
+    firstName: string;
+    lastName: string;
+    email: string;
+    birthDate: string;
+    password: string;
+    confirmPassword: string;
+  };
+
+  const [values, setValues] = useState<FormValues>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    birthDate: "",
+    password: "",
+    confirmPassword: ""
+  });
+
+  type InputProps = {
+    id: number;
+    name: string;
+    type: string;
+    errorMessage: string;
+    label: string;
+    pattern?: string;
+    required: boolean;
+    max?: string;
+    min?: string;
+  };
+
+  const today = new Date();
+  const eighteenYearsAgo = new Date(
+    today.getFullYear() - 18,
+    today.getMonth(),
+    today.getDate() + 1
+  );
+
+  const centurytwentyAgo = new Date(
+    today.getFullYear() - 120,
+    today.getMonth(),
+    today.getDate()
+  );
+
+  const minBirthDate = centurytwentyAgo.toISOString().split('T')[0];
+  const maxBirthDate = eighteenYearsAgo.toISOString().split('T')[0];
+
+  const inputs: InputProps[]  = [
+    {
+      id: 1,
+      name: "firstName",
+      type: "text",
+      errorMessage: "First name should be at least two characters long and have no special characters",
+      label: "First Name",
+      pattern: `^[A-Za-z]{2,30}$`,
+      required: true,
+    },
+    {
+      id: 2,
+      name: "lastName",
+      type: "text",
+      errorMessage: "Last name should be at least two characters long and have no special characters",
+      label: "Last Name",
+      pattern: "^[A-za-z]{2,30}$",
+      required: true
+    },
+    {
+      id: 3,
+      name: "email",
+      type: "email",
+      errorMessage: "Invalid email",
+      label: "Email Address",
+      required: true
+    },
+    {
+      id: 4,
+      name: "birthDate",
+      type: "date",
+      errorMessage: "You must be at least 18 years old",
+      label: "Date of Birth",
+      pattern: "",
+      required: true,
+      max: maxBirthDate,
+      min: minBirthDate
+    },
+    {
+      id: 5,
+      name: "password",
+      type: "password",
+      errorMessage: "Your password must be at least 8 characters long and contain at least an uppercase letter, a number and a special character",
+      label: "Password",
+      pattern: `^(?=.*[0-9])(?=.*[a-zA-Z])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,20}$`,
+      required: true
+    },
+    {
+      id: 6,
+      name: "confirmPassword",
+      type: "password",
+      errorMessage: "Passwords don't match",
+      label: "Confirm Password",
+      pattern: values.password,
+      required: true
+    }
+  ];
+
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    setValues({ ...values, [name]: value });
+  };
+
+  console.log(values)
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setOpen(false);
+  };
+
+  // const handleButtonClick = () => {
+  //   if (formRef.current) {
+  //     formRef.current.requestSubmit(); // Trigger form submission
+  //   }
+  // };
   return (
     <div>
       <Dialog open={open} onClose={setOpen} className="relative z-10">
@@ -45,31 +170,11 @@ function SignUp({open, setOpen}: SignUpProp) {
                 </div>
               </div>
               <div className='px-14 max-h-56 overflow-auto scrollbar'>
-                <form action="POST">
-                  <div className='bg-primary border-b border-white px-2 py-1 '>
-                    <label htmlFor="first_name" className='block text-xs text-gray-600 font-semibold'>First Name</label>
-                    <input type="text" id='first_name' className='signup_fields' required={true}/>
-                  </div>
-                  <div className='bg-primary border-b border-white px-2 py-1'>
-                    <label htmlFor="last_name" className='block text-xs text-gray-600 font-semibold'>Last Name</label>
-                    <input type="text" id='last_name' className='signup_fields' required={true}/>
-                  </div>
-                  <div className='bg-primary border-b border-white px-2 py-1'>
-                    <label htmlFor="email" className='block text-xs text-gray-600 font-semibold'>Email Address</label>
-                    <input type="email" id='email' className='signup_fields' required={true}/>
-                  </div>
-                  <div className='bg-primary border-b border-white px-2 py-1'>
-                    <label htmlFor="dob" className='block text-xs text-gray-600 font-semibold'>Date of Birth</label>
-                    <input type="date" id='dob' className='signup_fields' required={true}/>
-                  </div>
-                  <div className='bg-primary border-b border-white px-2 py-1'>
-                    <label htmlFor="pass1" className='block text-xs text-gray-600 font-semibold'>Password</label>
-                    <input type="password" id='pass1' className='signup_fields' required={true}/>
-                  </div>
-                  <div className='bg-primary border-b border-white px-2 py-1'>
-                    <label htmlFor="pass2" className='block text-xs text-gray-600 font-semibold'>Confirm Password</label>
-                    <input type="password" id='pass2' className='signup_fields' required={true}/>
-                  </div>
+                <form action="POST" onSubmit={handleSubmit}>
+                  {inputs.map(input=>(
+                    <SignUpInputs key={input.id} {...input} value={values[input.name as keyof FormValues]} onChange={onChange}/>
+                  ))}
+
                 </form>
               </div>
             </div>
