@@ -24,3 +24,7 @@ body {
 .scrollbar::-webkit-scrollbar-thumb {
     @apply bg-gray-300;
 }
+
+input:invalid[focused="true"] ~ .error {
+    display: block;
+}
