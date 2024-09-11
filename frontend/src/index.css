@@ -4,6 +4,7 @@
 @tailwind utilities;
 
 body {
+    @apply font-body;
     box-sizing: border-box;
 }
 
