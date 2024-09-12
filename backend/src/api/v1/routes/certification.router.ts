@@ -12,10 +12,12 @@ const certificationRouter = Router({mergeParams: true});
 
 certificationRouter.get<'/', UserParam>('/', async (req, res) => {
     try {
-        const certifications = await (new CertificationController())
-            .getCerts(req.params.user_id);
+        const controller = new CertificationController();
+        const certifications = await controller.getCerts(req.params.user_id);
 
-        res.status(200).json(certifications);
+        res.status(200).json(
+            (certifications as Certification[]).map(cert => controller.getCertInfo(cert))
+        );
     } catch (err) {
         const [code, json] = resData(err);
         res.status(code).json(json);
@@ -24,10 +26,11 @@ certificationRouter.get<'/', UserParam>('/', async (req, res) => {
 
 certificationRouter.get<'/:cert_id', MergedParams>('/:cert_id', async (req, res) => {
     try {
-        const certification = await (new CertificationController())
+        const controller = new CertificationController();
+        const certification = await controller
             .getCerts(req.params.user_id, req.params.cert_id);
 
-        res.status(200).json(certification);
+        res.status(200).json(controller.getCertInfo(certification as Certification));
     } catch (err) {
         const [code, json] = resData(err);
         res.status(code).json(json);
@@ -36,12 +39,14 @@ certificationRouter.get<'/:cert_id', MergedParams>('/:cert_id', async (req, res)
 
 certificationRouter.post<'/', UserParam>('/', ensureJsonContentType, async (req, res) => {
     try {
+        const controller = new CertificationController();
         const user = await (new UserController())
             .getEntityById(req.params.user_id, ['role', 'certifications']);
-        const cert = await (new CertificationController())
-            .createCertifications(user, validateBody({...req.body}));
+        const cert = await controller.createCertifications(
+            user, validateBody({...req.body})
+        );
 
-        res.status(201).json(cert);
+        res.status(201).json(controller.getCertInfo(cert));
     } catch (err) {
         const [code, json] = resData(err);
         res.status(code).json(json);
@@ -50,10 +55,12 @@ certificationRouter.post<'/', UserParam>('/', ensureJsonContentType, async (req,
 
 certificationRouter.put<'/:cert_id', MergedParams>('/:cert_id', ensureJsonContentType, async (req, res) => {
     try {
-        const cert = await (new CertificationController())
-            .updateCert(req.params.user_id, req.params.cert_id, validateBody({...req.body}));
+        const controller = new CertificationController();
+        const cert = await controller.updateCert(
+            req.params.user_id, req.params.cert_id, validateBody({...req.body})
+        );
 
-        res.status(200).json(cert);
+        res.status(200).json(controller.getCertInfo(cert));
     } catch (err) {
         const [code, json] = resData(err);
         res.status(code).json(json);

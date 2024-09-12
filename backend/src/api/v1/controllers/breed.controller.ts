@@ -87,6 +87,10 @@ export class BreedController extends BaseController<Breed> {
 
         this.updateProperties(breed, data);
         await this.propertyValidation(breed, "Couldn't update breed");
-        return await this.repository.save(breed);
+        const savedBreed = await this.repository.save(breed);
+        return {
+            ...savedBreed,
+            pets: savedBreed.pets.length
+        };
     }
 }

@@ -170,13 +170,13 @@ export const loginRegister = (req: Request, res: Response, next: NextFunction) =
 };
 
 export const bookingQuery = (req: Request, res: Response, next: NextFunction) => {
-    const allowedKeys = ['ACCEPTED', 'REJECTED', 'CANCELLED'];
+    const allowedKeys = ['ACCEPTED', 'REJECTED', 'CANCELLED', 'COMPLETED'];
     const key = Object.keys(req.query).map((key) => key.toUpperCase());
 
     if (key.length > 1 || !allowedKeys.includes(key[0]))
         return res.status(400).json({
             error: 'Invalid query parameters.',
-            allowed: '?accepted, ?rejected or ?cancelled'
+            allowed: '?accepted, ?rejected, ?cancelled or ?completed'
         });
     req.query.status = key[0];
     next();

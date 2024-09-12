@@ -8,9 +8,9 @@ export class HasPetWithName implements ValidatorConstraintInterface {
             return true;
 
         const currentPet: Pet = args.object as Pet;
-        const hasPetWithName = currentPet.user.pets.some(pet =>
-            pet.name.toLowerCase() === name.toLowerCase()
-        );
+        const hasPetWithName = currentPet.user.pets.some(
+            pet => pet.id !== currentPet.id && pet.name.toLowerCase() === currentPet.name.toLowerCase()
+        )
 
         return !hasPetWithName;
     }

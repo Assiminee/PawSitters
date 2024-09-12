@@ -58,4 +58,16 @@ petRouter.put<'/:pet_id', MergedParams>('/:pet_id', ensureJsonContentType, async
     }
 });
 
+
+petRouter.delete<'/:pet_id', MergedParams>('/:pet_id', ensureJsonContentType, async (req, res) => {
+    try {
+        await (new PetController()).deletePet(req.params.user_id, req.params.pet_id);
+
+        res.status(204).json();
+    } catch (err) {
+        const [code, json] = resData(err);
+        res.status(code).json(json);
+    }
+});
+
 export default petRouter;

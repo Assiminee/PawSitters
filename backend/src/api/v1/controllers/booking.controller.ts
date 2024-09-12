@@ -18,6 +18,25 @@ export class BookingController extends BaseController<Booking> {
         this.entityColumns.allowed_columns = this.entityColumns.required_columns;
     }
 
+    public getBookingInfo = (booking : Booking) => {
+        return {
+            ...booking,
+            owner: {
+                ...booking.owner.getMinimalInfo(),
+                address: booking.owner.address.removeCreatedUpdatedDates(),
+            },
+            sitter: {
+                ...booking.sitter.getMinimalInfo(),
+                address: booking.sitter.address.removeCreatedUpdatedDates(),
+            },
+            pets: booking.pets.map((pet: Pet) =>
+                pet.removeCreatedUpdatedDates()
+            ),
+            reviews: booking.reviews,
+            payment: booking.payment
+        }
+    }
+
     private userExists:
         (id: string, role: string, user: User | null) => asserts user is User =
         (id: string, role: string, user: User | null) => {
@@ -194,7 +213,12 @@ export class BookingController extends BaseController<Booking> {
         const root = role === "SITTER" ? "sittings" : "bookings";
 
         const userWithBookings = await userController.getEntityById(
-            id, [root, `${root}.payment`, `${root}.pets`, `${root}.owner`, `${root}.sitter`, `${root}.reviews`]
+            id, [
+                root, `${root}.payment`, `${root}.pets`,
+                `${root}.owner`, `${root}.sitter`,
+                `${root}.sitter.address`, `${root}.owner.address`,
+                `${root}.reviews`
+            ]
         );
         return userWithBookings[root];
     }
@@ -219,7 +243,9 @@ export class BookingController extends BaseController<Booking> {
             {
                 where: where,
                 relations: [
-                    'payment', 'pets', 'owner', 'sitter', 'reviews'
+                    'payment', 'pets', 'owner', 'sitter', 'reviews',
+                    'owner.address', 'sitter.address', 'reviews.reviewed',
+                    'reviews.reviewer',
                 ]
             });
 
@@ -254,7 +280,7 @@ export class BookingController extends BaseController<Booking> {
                 "Only active bookings can be marked 'COMPLETED'"
             );
             this.statusUpdateException(
-                this.dateCompare(booking.end_date) < 0,
+                this.dateCompare(booking.end_date) > 0,
                 "An active booking can only be marked 'COMPLETED' after the end date"
             );
         } else if (status === 'ACCEPTED' || status === 'REJECTED') {
@@ -320,7 +346,7 @@ export class BookingController extends BaseController<Booking> {
 
     public deleteBooking = async (user_id: string, booking_id: string) => {
         const booking = await this.getBooking(user_id, booking_id);
-        if (["CANCELLED", "PENDING"].includes(booking.status)) {
+        if (["CANCELLED", "PENDING", "REJECTED"].includes(booking.status)) {
             if (booking.payment) {
                 await Payment.remove(booking.payment);
                 const paymentExists = await Payment.existsBy({id: booking.payment.id});
@@ -333,7 +359,7 @@ export class BookingController extends BaseController<Booking> {
         }
         throw new ForbiddenRequest("Can't delete booking", {
             failed: "delete",
-            reason: "Only bookings that are pending for confirmation, or that have been cancelled, can be deleted"
+            reason: "Only bookings that are pending, cancelled, or rejected can be deleted"
         })
     }
 

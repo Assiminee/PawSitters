@@ -233,7 +233,7 @@ export class User extends BaseModel {
     }
 
     getMinimalInfo() {
-        return {
+        let obj = {
             id: this.id,
             fname: this.fname,
             lname: this.lname,
@@ -241,7 +241,11 @@ export class User extends BaseModel {
             phone: this.phone,
             gender: this.gender,
             birthday: this.birthday,
-            account_stat: this.account_stat
+            account_stat: this.account_stat,
+            fee: this.fee
         }
+        if (!this.fee)
+            delete obj.fee;
+        return obj;
     }
 }

@@ -2,23 +2,24 @@ import {BaseController} from "./base.controller";
 import {Pet, PetData} from "../../../orm/entities/Pet";
 import {User} from "../../../orm/entities/User";
 import {Breed} from "../../../orm/entities/Breed";
-import {ForbiddenRequest, NotFoundError} from "../errors/Errors";
+import {AppError, ForbiddenRequest, NotFoundError} from "../errors/Errors";
 import {UserController} from "./user.controller";
 
 export class PetController extends BaseController<Pet> {
     constructor() {
         super(Pet);
         this.entityColumns.updatable_columns = [
-            "name", "size", "description", "temperament"
+            "name", "size", "description", "temperament", "image_path"
         ];
         this.entityColumns.allowed_columns = [
             "name", "size", "description", "temperament",
-            "birthdate", "gender", "breed"
+            "birthdate", "gender", "breed", "image_path"
         ];
         this.entityColumns.required_columns = [
             "name", "size", "description",
             "birthdate", "gender", "breed"
         ];
+        this.entityColumns.unique_columns = ['image_path']
     }
 
     private getPetData = (pet : Pet) : PetData => {
@@ -159,10 +160,37 @@ export class PetController extends BaseController<Pet> {
 
         this.forbiddenUpdate(data);
         this.hasInvalidColumns(data);
+        await this.hasExistingData(data);
         this.checkEnums(data);
         this.updateProperties(pet, data);
         await this.propertyValidation(pet, "Couldn't update pet");
         const savedPet = await this.repository.save(pet);
         return this.getPetData(savedPet);
+    }
+
+    public deletePet = async (user_id: string, pet_id: string) => {
+        const pet = await this.repository.findOne({
+            where: {
+                id: pet_id,
+                user: {id: user_id}
+            },
+            relations: ['bookings']
+        });
+
+        if (!pet || pet.status === "DELETED") {
+            throw new NotFoundError("Couldn't delete pet", {not_found: `Invalid pet id ${pet_id}`})
+        }
+
+        if (pet.bookings && pet.bookings.length > 0) {
+            pet.status = "DELETED";
+            pet.image_path = null;
+            await this.repository.save(pet);
+            return;
+        }
+        await this.repository.remove(pet);
+        const exists = await this.repository.existsBy({id: pet_id});
+        if (exists)
+            throw new AppError("Couldn't delete pet", 500, {failed: "delete", reason: "Unknown"})
+
     }
 }

@@ -12,9 +12,9 @@ addressRouter.get<'/', UserParam>('/', async (req, res) => {
         const addressController = new AddressController();
         const user = await (new UserController())
             .getEntityById(req.params.user_id, ['address', 'address.user']);
+        const json = user.address ? addressController.getAddressData(user.address) : {};
 
-        if (user.address)
-            res.status(200).json(addressController.getAddressData(user.address));
+        res.status(200).json(json);
     } catch (err) {
         const [code, json] = resData(err);
         res.status(code).json(json);
@@ -57,7 +57,7 @@ addressRouter.delete<'/', UserParam>('/', async (req, res) => {
             .deleteAddress(user);
 
         if (deleteResult.affected === 0) {
-            res.status(500).json({failed : "delete", reason : "Unknown"});
+            res.status(500).json({failed: "delete", reason: "Unknown"});
             return;
         }
         res.status(204).send();

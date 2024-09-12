@@ -1,5 +1,5 @@
 import {Column, Entity, JoinColumn, ManyToOne} from "typeorm";
-import {IsNotEmpty, IsNumber, IsString, Max, Min} from "class-validator";
+import {IsNotEmpty, IsNumber, IsString, Max, Min, MinLength} from "class-validator";
 import {BaseModel} from "./BaseModel";
 import {User} from "./User";
 import {Booking} from "./Booking";
@@ -39,6 +39,7 @@ export class Review extends BaseModel {
     })
     @IsNotEmpty()
     @IsString()
+    @MinLength(30)
     review!: string;
 
     @Column({type: "int", default: 1})

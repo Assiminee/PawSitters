@@ -13,6 +13,13 @@ export class CertificationController extends BaseController<Certification> {
         this.entityColumns.allowed_columns = this.entityColumns.required_columns;
     }
 
+    public getCertInfo = (cert: Certification) => {
+        return {
+            ...cert,
+            user: cert.user.getMinimalInfo()
+        };
+    }
+
     public getCerts = async (user_id: string, cert_id: string | null = null) => {
         const user = await (new UserController())
             .getEntityById(user_id, ['role', 'certifications', 'certifications.user']);

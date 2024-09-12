@@ -18,7 +18,7 @@ roleRouter.get('/', async (req, res) => {
 roleRouter.get('/:role_id', async (req, res) => {
     try {
         const role = await (new BaseController(Role))
-            .getEntityById(req.params.role_id);
+            .getEntityById(req.params.role_id, ['users']);
 
         res.status(200).json(role);
     } catch (err) {

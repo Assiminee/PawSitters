@@ -16,16 +16,16 @@ export class UserController extends BaseController<User> {
             "role"
         ];
         this.entityColumns.unique_columns = [
-            "email", "phone", "bank_account_number"
+            "email", "phone", "bank_account_number", "image_path"
         ];
         this.entityColumns.updatable_columns = [
-            "email", "phone", "bank_account_number", "password", "fee"
+            "email", "phone", "bank_account_number", "password", "fee", "image_path"
         ]
         this.entityColumns.allowed_columns = [
             "fname", "lname", "email",
             "password", "gender", "birthday",
             "role", "phone", "bank_account_number",
-            "fee"
+            "fee", "image_path"
         ]
     }
 
