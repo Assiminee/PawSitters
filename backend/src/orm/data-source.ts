@@ -10,8 +10,11 @@ import {Payment} from "./entities/Payment";
 import {Pet} from "./entities/Pet";
 import {Species} from "./entities/Species";
 import { config } from 'dotenv';
+import path from 'path';
 
-config();
+const envPath = path.resolve(__dirname, '../../.env');
+
+config({ path: envPath });
 
 export const AppDataSource = new DataSource({
     type: "mysql",
