@@ -69,7 +69,7 @@ export class BaseRepository<T extends ObjectLiteral> {
             const missing = this.hasRequiredColumns(data);
 
             if (Object.keys(data).length === 0)
-                reject("Cannot save entity (missing data)");
+                reject("Cannot save entity (missing data.json)");
 
             if (Object.keys(invalid).length > 0 || Object.keys(missing).length > 0)
                 reject({"Invalid Columns": invalid, "Missing Columns": missing});

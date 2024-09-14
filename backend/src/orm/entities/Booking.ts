@@ -1,68 +1,86 @@
-import {Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToOne} from "typeorm";
+import {AfterLoad, Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne} from "typeorm";
 import {BaseModel} from "./BaseModel";
 import {User} from "./User";
 import {Payment} from "./Payment";
 import {Pet} from "./Pet";
+import {ArrayNotEmpty, IsDate, IsEnum, IsNotEmpty, IsOptional, IsString, Validate} from "class-validator";
+import {
+    HasBankAccountNumber, HasFeeSpecified,
+    HasOwnerRole,
+    HasSitterRole,
+    InSameCityCountry, IsValidInterval
+} from "../custom_validation/BookingCustomValidation";
+import {Review} from "./Review";
 
-export enum PaymentStats {
-    PENDING = "Pending",
-    ACTIVE = "Active",
-    CANCELLED = "Cancelled",
-    COMPLETE = "Complete"
+export enum BookingStat {
+    PENDING = "PENDING",
+    ACCEPTED = "ACCEPTED",
+    REJECTED = "REJECTED",
+    ACTIVE = "ACTIVE",
+    CANCELLED = "CANCELLED",
+    COMPLETED = "COMPLETED"
 }
 
 @Entity()
 export class Booking extends BaseModel {
-    constructor() {
-        super();
-        this.start_time =  "00:00";
-        this.end_time =  "00:00";
-        this.owner = null;
-        this.sitter = null;
-        this.payment = null;
-        this.end_date = null;
-        this.start_date = null;
-        this.status = '';
-    }
-
     @ManyToOne(
         () => User,
         (user: User) => user.bookings
     )
     @JoinColumn({name: "owner_id"})
-    owner: User | null;
+    @IsNotEmpty()
+    @Validate(HasOwnerRole)
+    @Validate(HasBankAccountNumber)
+    owner!: User;
 
     @ManyToOne(
         () => User,
         (user: User) => user.sittings
     )
     @JoinColumn({name: "sitter_id"})
-    sitter: User | null;
+    @IsNotEmpty()
+    @Validate(HasSitterRole)
+    @Validate(InSameCityCountry)
+    @Validate(HasBankAccountNumber)
+    @Validate(HasFeeSpecified)
+    sitter!: User;
 
     @OneToOne(
         () => Payment,
-        (payment: Payment) => payment.booking
+        (payment: Payment) => payment.booking,
+        {cascade : true}
     )
     @JoinColumn({name: "payment_id"})
-    payment: Payment | null;
+    @IsOptional()
+    payment?: Payment | null;
+
+    @OneToMany(
+        () => Review,
+        (review: Review) => review.booking,
+        {cascade: true}
+    )
+    reviews!: Review[];
 
     @Column({
         type: "enum",
-        enum: PaymentStats
+        enum: BookingStat,
+        default: BookingStat.PENDING
     })
-    status: string;
+    @IsOptional()
+    @IsString()
+    @IsEnum(BookingStat)
+    status!: string;
 
     @Column({type: "date", update: false})
-    start_date: Date | null;
+    @IsNotEmpty({message: "Must specify a start date"})
+    @IsDate()
+    start_date!: Date;
 
     @Column({type: "date", update: false})
-    end_date: Date | null;
-
-    @Column({type: "time", nullable: false})
-    start_time: string;
-
-    @Column({type: "time", nullable: false})
-    end_time: string;
+    @IsNotEmpty({message: "Must specify an end date"})
+    @IsDate()
+    @Validate(IsValidInterval)
+    end_date!: Date;
 
     @ManyToMany(() => Pet, (pet : Pet) => pet.bookings)
     @JoinTable({
@@ -70,5 +88,12 @@ export class Booking extends BaseModel {
         joinColumn: {name: "booking_id", referencedColumnName: "id"},
         inverseJoinColumn: {name: "pet_id", referencedColumnName: "id"}
     })
+    @ArrayNotEmpty({ message: 'A booking must involve at least one pet' })
     pets!: Pet[];
+
+    @AfterLoad()
+    transform() {
+        this.start_date = new Date(this.start_date);
+        this.end_date = new Date(this.end_date);
+    }
 }
