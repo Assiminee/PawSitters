@@ -116,13 +116,13 @@ function Sitters() {
                   {/* Cards here */}
                   <article className='card'>
                     <a href="#">
-                      <div className='overflow-hidden mb-1'>
+                      <div className='overflow-hidden mb-1 backrop-blur-lg'>
                         <img src="./src/assets/images/little-dog-with-owner-playing-having-fun-young-teen-girl-sitting-couch-with-her-pet_941451-2770.jpg" alt="" className='h-32 w-full sm:h-48 object-cover'/>
                       </div>
                       <div className='px-2'>
-                        <h3 className='font-semibold'>User name</h3>
-                        <span className='text-gray-500 text-sm'>City</span>
-                        <span className='block text-lg font-bold'>Fee</span>
+                        <h3 className='font-semibold'>Zahra Laghzaoui</h3>
+                        <span className='text-gray-500 text-sm'>Casablanca</span>
+                        <span className='block text-lg font-bold'>$7.84</span>
 
                       </div>
                       <div className='badge'>
@@ -133,64 +133,64 @@ function Sitters() {
                   <article className='card'>
                     <a href="#">
                       <div className='overflow-hidden mb-1'>
-                        <img src="./src/assets/images/little-dog-with-owner-playing-having-fun-young-teen-girl-sitting-couch-with-her-pet_941451-2770.jpg" alt="" className='h-32 w-full sm:h-48 object-cover'/>
+                        <img src="./src/assets/images/kiptoo_cheruiyot.jpeg" alt="" className='h-32 w-full sm:h-48 object-cover'/>
                       </div>
                       <div className='px-2'>
-                        <h3 className='font-semibold'>User name</h3>
-                        <span className='text-gray-500 text-sm'>City</span>
-                        <span className='block text-lg font-bold'>Fee</span>
+                        <h3 className='font-semibold'>Kiptoo Cheruiyot</h3>
+                        <span className='text-gray-500 text-sm'>Nakuru</span>
+                        <span className='block text-lg font-bold'>$9.51</span>
 
                       </div>
                       <div className='badge'>
-                        <span>13 exp</span>
+                        <span>17 exp</span>
                       </div>
                     </a>
                   </article>
                   <article className='card'>
                     <a href="#">
                       <div className='overflow-hidden mb-1'>
-                        <img src="./src/assets/images/little-dog-with-owner-playing-having-fun-young-teen-girl-sitting-couch-with-her-pet_941451-2770.jpg" alt="" className='h-32 w-full sm:h-48 object-cover'/>
+                        <img src="./src/assets/images/youssef_idrissi.jpeg" alt="" className='h-32 w-full sm:h-48 object-cover'/>
                       </div>
                       <div className='px-2'>
-                        <h3 className='font-semibold'>User name</h3>
-                        <span className='text-gray-500 text-sm'>City</span>
-                        <span className='block text-lg font-bold'>Fee</span>
+                        <h3 className='font-semibold'>Youssef Idrissi</h3>
+                        <span className='text-gray-500 text-sm'>Rabat</span>
+                        <span className='block text-lg font-bold'>$6.89</span>
 
                       </div>
                       <div className='badge'>
-                        <span>13 exp</span>
+                        <span>6 exp</span>
                       </div>
                     </a>
                   </article>
                   <article className='card'>
                     <a href="#">
                       <div className='overflow-hidden mb-1'>
-                        <img src="./src/assets/images/little-dog-with-owner-playing-having-fun-young-teen-girl-sitting-couch-with-her-pet_941451-2770.jpg" alt="" className='h-32 w-full sm:h-48 object-cover'/>
+                        <img src="./src/assets/images/mwende_muthoni.jpeg" alt="" className='h-32 w-full sm:h-48 object-cover'/>
                       </div>
                       <div className='px-2'>
-                        <h3 className='font-semibold'>User name</h3>
-                        <span className='text-gray-500 text-sm'>City</span>
-                        <span className='block text-lg font-bold'>Fee</span>
+                        <h3 className='font-semibold'>Mwende Muthoni</h3>
+                        <span className='text-gray-500 text-sm'>Nairobi</span>
+                        <span className='block text-lg font-bold'>$6.45</span>
 
                       </div>
                       <div className='badge'>
-                        <span>13 exp</span>
+                        <span>9 exp</span>
                       </div>
                     </a>
                   </article>
                   <article className='card'>
                     <a href="#">
                       <div className='overflow-hidden mb-1'>
-                        <img src="./src/assets/images/little-dog-with-owner-playing-having-fun-young-teen-girl-sitting-couch-with-her-pet_941451-2770.jpg" alt="" className='h-32 w-full sm:h-48 object-cover'/>
+                        <img src="./src/assets/images/mutua_kilonzo.jpeg" alt="" className='h-32 w-full sm:h-48 object-cover'/>
                       </div>
                       <div className='px-2'>
-                        <h3 className='font-semibold'>User name</h3>
-                        <span className='text-gray-500 text-sm'>City</span>
-                        <span className='block text-lg font-bold'>Fee</span>
+                        <h3 className='font-semibold'>Mutua Kilonzo</h3>
+                        <span className='text-gray-500 text-sm'>Nairobi</span>
+                        <span className='block text-lg font-bold'>$5.92</span>
 
                       </div>
                       <div className='badge'>
-                        <span>13 exp</span>
+                        <span>12 exp</span>
                       </div>
                     </a>
                   </article>
