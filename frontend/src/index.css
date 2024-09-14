@@ -3,7 +3,7 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
+:root {
     @apply font-body;
     box-sizing: border-box;
 }
