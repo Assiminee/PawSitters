@@ -14,6 +14,8 @@ function SignUp({open, setOpen}: SignUpProp) {
     lastName: string;
     email: string;
     birthDate: string;
+    gender: string;
+    role: string;
     password: string;
     confirmPassword: string;
   };
@@ -23,6 +25,8 @@ function SignUp({open, setOpen}: SignUpProp) {
     lastName: "",
     email: "",
     birthDate: "",
+    gender: "",
+    role: "",
     password: "",
     confirmPassword: ""
   });
@@ -37,6 +41,7 @@ function SignUp({open, setOpen}: SignUpProp) {
     required: boolean;
     max?: string;
     min?: string;
+    list?: string;
   };
 
   const today = new Date();
@@ -88,13 +93,30 @@ function SignUp({open, setOpen}: SignUpProp) {
       type: "date",
       errorMessage: "You must be at least 18 years old",
       label: "Date of Birth",
-      pattern: "",
       required: true,
       max: maxBirthDate,
       min: minBirthDate
     },
     {
       id: 5,
+      name: "gender",
+      type: "text",
+      list: "gender-options",
+      errorMessage: "Select 'M' for male and 'F' for female",
+      label: "Gender",
+      required: true
+    },
+    {
+      id: 6,
+      name: "role",
+      type: "text",
+      list: "role-options",
+      errorMessage: "Select OWNER or SITTER",
+      label: "Role",
+      required: true
+    },
+    {
+      id: 7,
       name: "password",
       type: "password",
       errorMessage: "Your password must be at least 8 characters long and contain at least an uppercase letter, a number and a special character",
@@ -103,7 +125,7 @@ function SignUp({open, setOpen}: SignUpProp) {
       required: true
     },
     {
-      id: 6,
+      id: 8,
       name: "confirmPassword",
       type: "password",
       errorMessage: "Passwords don't match",
@@ -174,6 +196,16 @@ function SignUp({open, setOpen}: SignUpProp) {
                   {inputs.map(input=>(
                     <SignUpInputs key={input.id} {...input} value={values[input.name as keyof FormValues]} onChange={onChange}/>
                   ))}
+
+                  <datalist id="gender-options">
+                    <option value="M">Male</option>
+                    <option value="F">Female</option>
+                  </datalist>
+
+                  <datalist id="role-options">
+                    <option value="OWNER">Owner</option>
+                    <option value="SITTER">Sitter</option>
+                  </datalist>
 
                 </form>
               </div>
