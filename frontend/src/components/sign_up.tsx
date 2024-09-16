@@ -1,6 +1,7 @@
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import SignUpInputs from './sign_up_inputs';
+import { postData } from '../utils/signup_utils';
 
 interface SignUpProp {
     open: boolean;
@@ -10,30 +11,42 @@ interface SignUpProp {
 function SignUp({open, setOpen}: SignUpProp) {
 
   type FormValues = {
-    firstName: string;
-    lastName: string;
+    fname: string;
+    lname: string;
     email: string;
-    birthDate: string;
+    birthday: string;
     gender: string;
     role: string;
     password: string;
-    confirmPassword: string;
   };
 
   const [values, setValues] = useState<FormValues>({
-    firstName: "",
-    lastName: "",
+    fname: "",
+    lname: "",
     email: "",
-    birthDate: "",
+    birthday: "",
     gender: "",
     role: "",
-    password: "",
-    confirmPassword: ""
+    password: ""
   });
+
+  const initialValues: FormValues = {
+    fname: "",
+    lname: "",
+    email: "",
+    birthday: "",
+    gender: "",
+    role: "",
+    password: ""
+  };
+
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const feedbackRef = useRef<HTMLSpanElement>(null);
 
   type InputProps = {
     id: number;
-    name: string;
+    name?: string;
     type: string;
     errorMessage: string;
     label: string;
@@ -63,7 +76,7 @@ function SignUp({open, setOpen}: SignUpProp) {
   const inputs: InputProps[]  = [
     {
       id: 1,
-      name: "firstName",
+      name: "fname",
       type: "text",
       errorMessage: "First name should be at least two characters long and have no special characters",
       label: "First Name",
@@ -72,7 +85,7 @@ function SignUp({open, setOpen}: SignUpProp) {
     },
     {
       id: 2,
-      name: "lastName",
+      name: "lname",
       type: "text",
       errorMessage: "Last name should be at least two characters long and have no special characters",
       label: "Last Name",
@@ -89,7 +102,7 @@ function SignUp({open, setOpen}: SignUpProp) {
     },
     {
       id: 4,
-      name: "birthDate",
+      name: "birthday",
       type: "date",
       errorMessage: "You must be at least 18 years old",
       label: "Date of Birth",
@@ -126,7 +139,6 @@ function SignUp({open, setOpen}: SignUpProp) {
     },
     {
       id: 8,
-      name: "confirmPassword",
       type: "password",
       errorMessage: "Passwords don't match",
       label: "Confirm Password",
@@ -138,21 +150,46 @@ function SignUp({open, setOpen}: SignUpProp) {
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    setValues({ ...values, [name]: value });
+    if (name) {
+      setValues(prevValues => ({
+        ...prevValues,
+        [name]: value
+      }));
+    }
+  };
+
+  const updateFeedbackClass = (isSuccess: boolean) => {
+    if (feedbackRef.current) {
+      feedbackRef.current.classList.remove('hidden');
+      feedbackRef.current.classList.toggle('success-summary', isSuccess);
+      feedbackRef.current.classList.toggle('error-summary', !isSuccess);
+    }
   };
 
   console.log(values)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setOpen(false);
+    const submitValues = await postData(values);
+    if (submitValues?.success) {
+      setValues(initialValues);
+      setFeedback("Account created!");
+      updateFeedbackClass(true);
+
+      setTimeout(() => {
+        setOpen(false);
+      }, 2000);
+    } else {
+      setFeedback(submitValues?.message);
+      updateFeedbackClass(false);
+    }
   };
 
-  // const handleButtonClick = () => {
-  //   if (formRef.current) {
-  //     formRef.current.requestSubmit(); // Trigger form submission
-  //   }
-  // };
+  const handleButtonClick = () => {
+    if (formRef.current) {
+      formRef.current.requestSubmit(); // Trigger form submission
+    }
+  };
   return (
     <div>
       <Dialog open={open} onClose={setOpen} className="relative z-10">
@@ -182,7 +219,15 @@ function SignUp({open, setOpen}: SignUpProp) {
               </div>
               <div className='pl-14 pr-16'>
               <div className='flex items-center justify-center bg-slate-100 rounded-full hover:cursor-pointer hover:bg-slate-200 w-fit mx-auto p-1'>
-                  <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="LgbsSe-Bz112c h-3.5"><g><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path><path fill="none" d="M0 0h48v48H0z"></path></g></svg>
+                  <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="LgbsSe-Bz112c h-3.5">
+                    <g>
+                      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                      <path fill="none" d="M0 0h48v48H0z"></path>
+                    </g>
+                  </svg>
                   <a href="#" className='text-sm font-semibold ml-2'>Sign up with Google</a>
                 </div>
                 <div className='flex items-center justify-between'>
@@ -190,9 +235,10 @@ function SignUp({open, setOpen}: SignUpProp) {
                   <span className='block my-4 text-center'>or</span>
                   <div className='border h-0 w-2/5 px-2'></div>
                 </div>
+                <span ref={feedbackRef} className="hidden error-summary text-xs mr-[3px]">{feedback}</span>
               </div>
               <div className='px-14 max-h-56 overflow-auto scrollbar'>
-                <form action="POST" onSubmit={handleSubmit}>
+                <form action="POST" onSubmit={handleSubmit} ref={formRef} >
                   {inputs.map(input=>(
                     <SignUpInputs key={input.id} {...input} value={values[input.name as keyof FormValues]} onChange={onChange}/>
                   ))}
@@ -213,7 +259,7 @@ function SignUp({open, setOpen}: SignUpProp) {
             <div className="bg-slate-100 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
               <button
                 type="button"
-                onClick={() => setOpen(false)}
+                onClick={handleButtonClick /*() => setOpen(false)*/}
                 className="inline-flex w-full justify-center rounded-md bg-indigo-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 sm:ml-3 sm:w-auto"
               >
                 Signup
