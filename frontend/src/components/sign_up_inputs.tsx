@@ -16,7 +16,8 @@ function SignUpInputs(props: any) {
         onChange={onChange}
         onBlur={handleFocus}
         onFocus={() => inputProps.name === "confirmPassword" && setFocused(true)}
-        focused={focused.toString()}/>
+        focused={focused.toString()}
+        autoComplete="off"/>
       <span className="error text-[0.688rem] text-red-500 hidden">{errorMessage}</span>
     </div>
   )
