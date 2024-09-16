@@ -28,3 +28,13 @@ body {
 input:invalid[focused="true"] ~ .error {
     display: block;
 }
+
+.error-summary {
+    display: block;
+    @apply text-red-500 bg-red-200;
+}
+
+.success-summary {
+    display: block;
+    @apply text-green-500 bg-green-200;
+}
