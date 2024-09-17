@@ -1,17 +1,6 @@
 import {EntityPropertyNotFoundError} from "typeorm";
 import {AppError} from "../errors/Errors";
 import {NextFunction, Request, Response} from "express";
-import path from "path";
-import multer from 'multer';
-
-export const uploads = path.resolve(process.cwd(), "..") + '/public/uploads';
-
-export const validateBody = (body: object) => {
-    return Object.fromEntries(
-        Object.entries(body).map(([key, value]) =>
-            [key.toLowerCase(), value]
-        ));
-}
 
 export const resData = (err: any): [number, object] => {
     let statusCode = 500;
@@ -142,73 +131,3 @@ export const normalizeQueryParams = (req: Request, res: Response, next: NextFunc
     }, {} as { [key: string]: any });
     next();
 };
-
-export const ensureJsonContentType = (req: Request, res: Response, next: NextFunction) => {
-    if (req.headers['content-type'] !== 'application/json')
-        return res.status(415).json({error: 'Unsupported Media Type. Please send JSON data.json.'});
-
-    if (Array.isArray(req.body))
-        return res.status(400).json({error: 'Only objects can be passed'});
-
-    next();
-};
-
-export const loginRegister = (req: Request, res: Response, next: NextFunction) => {
-    const allowedKeys = ['login', 'register'];
-    const key = Object.keys(req.query).map((key) => key.toLowerCase());
-
-    if (key.length > 1 || !allowedKeys.includes(key[0]))
-        return res.status(400).json({
-            error: 'Invalid query parameters.',
-            allowed: '?login or ?register'
-        });
-
-    if (key[0] === 'login') {
-        if (!matchingParams(Object.keys(req.body), ['email', 'password']))
-            return res.status(400).json({
-                error: 'Missing required data for login',
-                required: 'email and password'
-            });
-    }
-    next();
-};
-
-export const bookingQuery = (req: Request, res: Response, next: NextFunction) => {
-    const allowedKeys = ['ACCEPTED', 'REJECTED', 'CANCELLED', 'COMPLETED'];
-    const key = Object.keys(req.query).map((key) => key.toUpperCase());
-
-    if (key.length > 1 || !allowedKeys.includes(key[0]))
-        return res.status(400).json({
-            error: 'Invalid query parameters.',
-            allowed: '?accepted, ?rejected, ?cancelled or ?completed'
-        });
-    req.query.status = key[0];
-    next();
-};
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploads);
-    },
-    filename: (req, file, cb) => {
-        let uniqueSuffix = Date.now() + '__User__' + req.params.user_id;
-        if (req.params.pet_id)
-            uniqueSuffix += '__Pet__' + req.params.pet_id;
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
-});
-
-export const upload = multer({
-    storage: storage,
-    limits: {fileSize: 1024 ** 3},
-    fileFilter: (req, file, cb) => {
-        const filetypes = /jpeg|jpg|png/;
-        const mimetype = filetypes.test(file.mimetype);
-        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-
-        if (mimetype && extname)
-            return cb(null, true);
-
-        cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', 'Only .png, .jpg, and .jpeg formats allowed!'));
-    }
-});

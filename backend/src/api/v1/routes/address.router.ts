@@ -1,5 +1,5 @@
 import {Router} from 'express';
-import {ensureJsonContentType, resData, validateBody} from "./helperFunctions";
+import {resData} from "./helperFunctions";
 import {UserController} from "../controllers/user.controller";
 import {AddressController} from "../controllers/address.controller";
 
@@ -15,52 +15,6 @@ addressRouter.get<'/', UserParam>('/', async (req, res) => {
         const json = user.address ? addressController.getAddressData(user.address) : {};
 
         res.status(200).json(json);
-    } catch (err) {
-        const [code, json] = resData(err);
-        res.status(code).json(json);
-    }
-});
-
-addressRouter.post<'/', UserParam>('/', ensureJsonContentType, async (req, res) => {
-    try {
-        const user = await (new UserController())
-            .getEntityById(req.params.user_id, ['address', 'address.user']);
-        const address = await (new AddressController())
-            .createAddress(user, validateBody({...req.body}));
-
-        res.status(201).json(address);
-    } catch (err) {
-        const [code, json] = resData(err);
-        res.status(code).json(json);
-    }
-});
-
-addressRouter.put<'/', UserParam>('/', ensureJsonContentType, async (req, res) => {
-    try {
-        const user = await (new UserController())
-            .getEntityById(req.params.user_id, ['address', 'address.user']);
-        const address = await (new AddressController())
-            .updateAddress(user, validateBody({...req.body}));
-
-        res.status(200).json(address);
-    } catch (err) {
-        const [code, json] = resData(err);
-        res.status(code).json(json);
-    }
-});
-
-addressRouter.delete<'/', UserParam>('/', async (req, res) => {
-    try {
-        const user = await (new UserController())
-            .getEntityById(req.params.user_id, ['address', 'address.user']);
-        const deleteResult = await (new AddressController())
-            .deleteAddress(user);
-
-        if (deleteResult.affected === 0) {
-            res.status(500).json({failed: "delete", reason: "Unknown"});
-            return;
-        }
-        res.status(204).send();
     } catch (err) {
         const [code, json] = resData(err);
         res.status(code).json(json);

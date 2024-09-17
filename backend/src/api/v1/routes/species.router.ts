@@ -1,10 +1,7 @@
 import {Router} from 'express';
 import {resData} from "./helperFunctions";
 import breedRouter from "./breed.router";
-import {BaseController} from "../controllers/base.controller";
-import {Species} from "../../../orm/entities/Species";
 import {SpeciesController} from "../controllers/species.controller";
-import {spec} from "node:test/reporters";
 
 const speciesRouter = Router();
 
