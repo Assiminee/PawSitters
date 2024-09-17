@@ -5,7 +5,6 @@ import {NotFoundError} from "../errors/Errors";
 import {In, LessThanOrEqual, MoreThanOrEqual} from "typeorm";
 import {Pet} from "../../../orm/entities/Pet";
 import {UserController} from "./user.controller";
-import {AddressController} from "./address.controller";
 import {Address} from "../../../orm/entities/Address";
 
 export class BookingController extends BaseController<Booking> {
@@ -90,7 +89,7 @@ export class BookingController extends BaseController<Booking> {
             ]
         );
         const bookings = userWithBookings[root];
-       
+
         for await (const booking of bookings) {
             if (!booking.sitter.address) {
                 const address = await Address.findOneBy({user: {id: booking.sitter.id}});
