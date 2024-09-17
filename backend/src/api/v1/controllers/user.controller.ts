@@ -1,7 +1,7 @@
 import {BaseController} from "./base.controller";
 import {User} from "../../../orm/entities/User";
 import {Role, Roles} from "../../../orm/entities/Role";
-import {NotFoundError} from "../errors/Errors";
+import {AppError, NotFoundError} from "../errors/Errors";
 import {Address} from "../../../orm/entities/Address";
 import {Pet} from "../../../orm/entities/Pet";
 import {Certification} from "../../../orm/entities/Certification";
@@ -16,16 +16,16 @@ export class UserController extends BaseController<User> {
             "role"
         ];
         this.entityColumns.unique_columns = [
-            "email", "phone", "bank_account_number", "image_path"
+            "email", "phone", "bank_account_number"
         ];
         this.entityColumns.updatable_columns = [
-            "email", "phone", "bank_account_number", "password", "fee", "image_path"
+            "email", "phone", "bank_account_number", "password", "fee"
         ]
         this.entityColumns.allowed_columns = [
             "fname", "lname", "email",
             "password", "gender", "birthday",
             "role", "phone", "bank_account_number",
-            "fee", "image_path"
+            "fee"
         ]
     }
 
@@ -80,7 +80,9 @@ export class UserController extends BaseController<User> {
     private isValidLocation = (address : Address | null, params : object) => {
         return (
             // @ts-ignore
-            address && address.city === params.city && address.country === params.country.toUpperCase()
+            address && address.city === params.city.toLowerCase() &&
+            // @ts-ignore
+            address.country === params.country.toUpperCase()
         )
     }
 
@@ -112,9 +114,29 @@ export class UserController extends BaseController<User> {
         const options = this.getOptions(params);
         const relations = this.getRelations(params);
 
-        return await this.repository.find({
+        const users = await this.repository.find({
             where: options,
             relations: relations
+        });
+
+        return users.map(user => {
+            if (user.role.role === 'ADMIN') {
+                for (const relation of relations) {
+                    if (['role', 'address'].includes(relation))
+                        continue;
+                    delete user[relation];
+                }
+            }
+
+            if (user.role.role !== 'ADMIN') {
+                const totalRating = user.reviews_received.reduce((acc, review) => acc + review.rating, 0);
+                user.rating = totalRating ? totalRating / user.reviews_received.length : 0;
+            }
+
+            if (user.role.role !== 'SITTER')
+                delete user.fee;
+
+            return user;
         });
     }
 
@@ -130,10 +152,16 @@ export class UserController extends BaseController<User> {
 
         const relations = this.getRelations({role: user.role.role.toLowerCase()});
 
-        return await this.repository.findOne({
+        const foundUser = await this.repository.findOneOrFail({
             where: {id: id},
             relations: relations
-        })
+        });
+
+        if (foundUser.role.role !== 'ADMIN') {
+            const totalRating = foundUser.reviews_received.reduce((acc, review) => acc + review.rating, 0);
+            foundUser.rating = totalRating ? totalRating / foundUser.reviews_received.length : 0;
+        }
+        return foundUser;
     }
 
     public login = async (data: object) => {
@@ -145,17 +173,17 @@ export class UserController extends BaseController<User> {
         });
 
         if (!user)
-            throw new NotFoundError(`User not found`, {not_found: `Invalid email`});
+            throw new NotFoundError("User not found", {error: "Invalid email"});
 
         const role = user.role.role.toLowerCase();
         // @ts-ignore
         const correctPassword = await user.validatePassword(data.password);
 
         if (!correctPassword)
-            throw new NotFoundError("Invalid password", {not_found : "Invalid password"});
+            throw new AppError("Invalid password", 401,{error : "Invalid password"});
 
         const relations = this.getRelations({role: role});
-        return await this.getEntityById(user.id, relations);
+        return this.getEntityById(user.id, relations);
     }
 
     private checkPhone = (data: object) => {
@@ -239,6 +267,8 @@ export class UserController extends BaseController<User> {
         if (user.address)
             await Address.remove(user.address);
 
+        this.removeImage(user.image_path);
+
         if (role === 'admin') {
             await this.repository.remove(user);
             return;
@@ -254,8 +284,10 @@ export class UserController extends BaseController<User> {
             await Certification.remove(user.certifications);
 
         if (this.canDelete(user)) {
-            if (role === 'owner')
+            if (role === 'owner') {
+                user.pets.forEach(pet => this.removeImage(pet.image_path));
                 await Pet.remove(user.pets);
+            }
             await this.repository.remove(user);
             return;
         }

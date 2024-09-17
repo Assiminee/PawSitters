@@ -22,7 +22,7 @@ export class PetController extends BaseController<Pet> {
         this.entityColumns.unique_columns = ['image_path']
     }
 
-    private getPetData = (pet : Pet) : PetData => {
+    public getPetData = (pet : Pet) : PetData => {
         return {
             id: pet.id,
             createdAt: pet.createdAt,
@@ -71,14 +71,13 @@ export class PetController extends BaseController<Pet> {
     public findPetById = async (pet_id : string, user_id : string) => {
         await this.petExists(pet_id, user_id);
 
-        const pet = await this.repository.findOneOrFail({
+        return this.repository.findOneOrFail({
             where : {
                 id : pet_id,
                 user : { id : user_id }
             },
             relations : ['user', 'breed', 'breed.species']
         });
-        return this.getPetData(pet);
     }
 
     private checkForbiddenData = (data: object, key: string) => {

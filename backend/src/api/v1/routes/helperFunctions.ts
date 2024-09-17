@@ -1,6 +1,10 @@
 import {EntityPropertyNotFoundError} from "typeorm";
 import {AppError} from "../errors/Errors";
 import {NextFunction, Request, Response} from "express";
+import path from "path";
+import multer from 'multer';
+
+export const uploads = path.resolve(process.cwd(), "..") + '/public/uploads';
 
 export const validateBody = (body: object) => {
     return Object.fromEntries(
@@ -67,7 +71,7 @@ const validInterval = (start_date: Date | string, end_date: Date | string): bool
 }
 
 
-const isValidValues = (params : object) => {
+const isValidValues = (params: object) => {
     return (
         matchingParams(Object.keys(params), ['start_date', 'end_date', 'country', 'city']) &&
         // @ts-ignore
@@ -181,3 +185,30 @@ export const bookingQuery = (req: Request, res: Response, next: NextFunction) =>
     req.query.status = key[0];
     next();
 };
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploads);
+    },
+    filename: (req, file, cb) => {
+        let uniqueSuffix = Date.now() + '__User__' + req.params.user_id;
+        if (req.params.pet_id)
+            uniqueSuffix += '__Pet__' + req.params.pet_id;
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+export const upload = multer({
+    storage: storage,
+    limits: {fileSize: 1024 ** 3},
+    fileFilter: (req, file, cb) => {
+        const filetypes = /jpeg|jpg|png/;
+        const mimetype = filetypes.test(file.mimetype);
+        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+
+        if (mimetype && extname)
+            return cb(null, true);
+
+        cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', 'Only .png, .jpg, and .jpeg formats allowed!'));
+    }
+});

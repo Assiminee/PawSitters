@@ -10,6 +10,8 @@ import {
 import {NotFoundError, InvalidDataError, ForbiddenRequest} from "../errors/Errors";
 import {validate} from "class-validator";
 import {BaseModel} from "../../../orm/entities/BaseModel";
+import fs from "fs";
+import {exec} from "node:child_process";
 
 export interface JsonResponse {
     errors: number;
@@ -54,6 +56,15 @@ export class BaseController<T extends ObjectLiteral> {
             missing_columns: [],
             invalid_columns: []
         };
+    }
+
+    public removeImage = (path: string | null | undefined) => {
+        if (!path)
+            return;
+
+        fs.unlink(path, err => {
+            err ? console.error(err) : console.log("Image deleted");
+        });
     }
 
     protected isArrayOfValidStrings = (arr: any) => {
