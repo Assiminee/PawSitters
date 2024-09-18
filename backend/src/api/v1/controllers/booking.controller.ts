@@ -18,7 +18,6 @@ export class BookingController extends BaseController<Booking> {
     }
 
     public getBookingInfo = (booking : Booking) => {
-        const ownerAddress = booking.owner.address ? booking.owner.address.removeCreatedUpdatedDates() : null;
         return {
             ...booking,
             owner: {
