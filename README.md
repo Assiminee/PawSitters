@@ -60,3 +60,6 @@ localhost:8081/api/v1/users/<user_id>/address
   - To create a user, follow the format of the data in ./backend/src/data.json
   - If any information is missing for the creation of any entity, the API will return valid json that will guide you to create the entity.
   - For the option ?login, the email and password of the user must be specified. Make sure to get the information from ./backend/src/data.json to test.
+
+## API Documentation
+  - A detailed documentation can be found in [here](https://github.com/Assiminee/PawSitters/blob/main/API%20Documentation.docx). Any and all endpoints are detailed in this file.
