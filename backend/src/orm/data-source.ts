@@ -32,7 +32,7 @@ export const AppDataSource = new DataSource({
         Booking, Breed, Payment,
         Pet, Species
     ],
-    synchronize: false, // Do not automatically synchronize the database schema
+    synchronize: true, // Do not automatically synchronize the database schema
     logging: false // Disable SQL query logging
 });
 
