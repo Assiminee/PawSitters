@@ -3,13 +3,32 @@ import {BaseModel} from "./BaseModel";
 import {User} from "./User";
 import {IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString} from "class-validator";
 
+/**
+ * Enum representing possible countries.
+ *
+ * @enum {string}
+ */
 export enum Country {
     GH = "GHANA",
     MA = "MOROCCO"
 }
 
+
+/**
+ * Entity representing an address.
+ *
+ * Extends `BaseModel` to inherit common fields and methods.
+ *
+ * @extends BaseModel
+ */
 @Entity()
 export class Address extends BaseModel {
+    /**
+     * Building number of the address.
+     *
+     * @type {number}
+     * @optional
+     */
     @Column({
         type: "int",
         nullable: true
@@ -18,6 +37,11 @@ export class Address extends BaseModel {
     @IsNumber()
     building_num?: number;
 
+    /**
+     * Street name of the address.
+     *
+     * @type {string}
+     */
     @Column({
         type: "varchar",
         length: 255
@@ -26,6 +50,12 @@ export class Address extends BaseModel {
     @IsString()
     street!: string;
 
+    /**
+     * Apartment number of the address.
+     *
+     * @type {number}
+     * @optional
+     */
     @Column({
         type: "int",
         nullable: true
@@ -34,6 +64,12 @@ export class Address extends BaseModel {
     @IsNumber()
     apartment_num?: number;
 
+    /**
+     * Floor number of the address.
+     *
+     * @type {number}
+     * @optional
+     */
     @Column({
         type: "int",
         nullable: true
@@ -42,6 +78,11 @@ export class Address extends BaseModel {
     @IsNumber()
     floor?: number
 
+    /**
+     * City of the address.
+     *
+     * @type {string}
+     */
     @Column({
         type: "varchar",
         length: 200
@@ -50,7 +91,11 @@ export class Address extends BaseModel {
     @IsString()
     city!: string;
 
-
+    /**
+     * Country of the address, represented by the `Country` enum.
+     *
+     * @type {string}
+     */
     @Column({
         type: "enum",
         enum: Country
@@ -59,6 +104,11 @@ export class Address extends BaseModel {
     @IsEnum(Country)
     country!: string;
 
+    /**
+     * Postal code of the address.
+     *
+     * @type {string}
+     */
     @Column({
         type: "varchar",
         length: 20
@@ -67,6 +117,13 @@ export class Address extends BaseModel {
     @IsString()
     postal_code!: string;
 
+    /**
+     * One-to-one relationship with the `User` entity.
+     *
+     * Specifies that each `Address` must be associated with exactly one `User`.
+     *
+     * @type {User}
+     */
     @OneToOne(
         () => User,
         (user: User) => user.address,
@@ -78,6 +135,11 @@ export class Address extends BaseModel {
     @IsNotEmpty()
     user!: User;
 
+    /**
+     * Normalize address fields before inserting or updating the entity.
+     *
+     * Converts the `city` and `street` fields to lowercase to ensure consistent formatting.
+     */
     @BeforeInsert()
     @BeforeUpdate()
     normalize() {

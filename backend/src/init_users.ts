@@ -2,8 +2,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as http from 'http';
 
+// Define the path to the data file
 const filePath = path.join(__dirname, 'data.json');
 
+// Function to make a POST request
 const postRequest = (path: string, data: any, callback: (responseBody: string) => void) => {
     const options: http.RequestOptions = {
         hostname: 'localhost',
@@ -36,6 +38,7 @@ const postRequest = (path: string, data: any, callback: (responseBody: string) =
     req.end();
 };
 
+// Function to create users from the data file
 export const createUsers = () => {
     fs.readFile(filePath, 'utf8', (err, data) => {
         if (err) {

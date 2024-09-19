@@ -31,21 +31,43 @@ import {
 } from "../custom_validation/UserCustomValidation";
 import * as bcrypt from "bcrypt";
 
+/**
+ * Enum representing user genders.
+ */
 export enum Gender {
-    F = "F",
-    M = "M"
+    F = "F",  // Female
+    M = "M"   // Male
 }
 
+/**
+ * Enum representing account statuses.
+ */
 export enum AccountStat {
-    A = "ACTIVE",
-    D = "DELETED"
+    A = "ACTIVE",   // Active account
+    D = "DELETED"   // Deleted account
 }
 
+/**
+ * Entity representing a user in the system.
+ *
+ * This entity stores user information including personal details, role, certifications, pets, and reviews.
+ * It includes methods for password encryption and validation.
+ *
+ * @extends BaseModel
+ * @entity
+ * @unique email, phone, bank_account_number
+ */
 @Entity()
 @Unique(['email'])
 @Unique(['phone'])
 @Unique(['bank_account_number'])
 export class User extends BaseModel {
+
+    /**
+     * The user's first name.
+     *
+     * @type {string}
+     */
     @Column({
         type: "varchar",
         length: 50
@@ -54,6 +76,11 @@ export class User extends BaseModel {
     @IsString({message: "First name must be a string"})
     fname!: string;
 
+    /**
+     * The user's last name.
+     *
+     * @type {string}
+     */
     @Column({
         type: "varchar",
         length: 50
@@ -62,6 +89,11 @@ export class User extends BaseModel {
     @IsString({message: "Last name must be a string"})
     lname!: string;
 
+    /**
+     * The user's email address.
+     *
+     * @type {string | null}
+     */
     @Column({
         type: "varchar",
         length: 255,
@@ -71,6 +103,11 @@ export class User extends BaseModel {
     @IsEmail({}, {message: "Invalid email"})
     email!: string | null;
 
+    /**
+     * The user's phone number.
+     *
+     * @type {string | null}
+     */
     @Column({
         type: "varchar",
         length: 20,
@@ -80,6 +117,11 @@ export class User extends BaseModel {
     @Validate(IsValidPhone)
     phone?: string | null;
 
+    /**
+     * The user's password.
+     *
+     * @type {string | null}
+     */
     @Column({
         type: "varchar",
         length: 255,
@@ -91,6 +133,11 @@ export class User extends BaseModel {
     })
     password!: string | null;
 
+    /**
+     * The user's gender.
+     *
+     * @type {string}
+     */
     @Column({
         type: "enum",
         enum: Gender
@@ -99,6 +146,11 @@ export class User extends BaseModel {
     @IsEnum(Gender, {message: "Gender can either be 'F' (Female) or 'M' (Male)"})
     gender!: string;
 
+    /**
+     * The user's birthdate.
+     *
+     * @type {Date}
+     */
     @Column({
         type: "date"
     })
@@ -107,6 +159,11 @@ export class User extends BaseModel {
     @Validate(IsAdult)
     birthday!: Date;
 
+    /**
+     * The user's fee, if applicable.
+     *
+     * @type {number | null}
+     */
     @Column({
         type: "decimal",
         precision: 10,
@@ -118,6 +175,11 @@ export class User extends BaseModel {
     @Validate(IsSitterFeeValidConstraint)
     fee?: number | null;
 
+    /**
+     * The user's bank account number.
+     *
+     * @type {string | null}
+     */
     @Column({
         name: "bank_account_number",
         type: "varchar",
@@ -129,15 +191,30 @@ export class User extends BaseModel {
     @MinLength(10, {message: "Invalid length"})
     bank_account_number?: string | null;
 
+    /**
+     * The user's account status.
+     *
+     * @type {string}
+     */
     @Column({type: "enum", enum: AccountStat, default: AccountStat.A})
     @IsOptional()
     @IsEnum(AccountStat)
     account_stat!: string;
 
+    /**
+     * The path to the user's profile image.
+     *
+     * @type {string | null}
+     */
     @Column({type: "varchar", length: 255, nullable: true})
     @IsOptional()
     image_path?: string | null;
 
+    /**
+     * The user's address.
+     *
+     * @type {Address}
+     */
     @OneToOne(
         () => Address,
         (address: Address) => address.user,
@@ -146,6 +223,11 @@ export class User extends BaseModel {
     @IsOptional()
     address!: Address;
 
+    /**
+     * The certifications associated with the user.
+     *
+     * @type {Certification[]}
+     */
     @OneToMany(
         () => Certification,
         (certification: Certification) => certification.user,
@@ -154,6 +236,11 @@ export class User extends BaseModel {
     @IsOptional()
     certifications!: Certification[];
 
+    /**
+     * The role assigned to the user.
+     *
+     * @type {Role}
+     */
     @ManyToOne(
         () => Role,
         (role: Role) => role.users,
@@ -162,6 +249,11 @@ export class User extends BaseModel {
     @IsNotEmpty()
     role!: Role;
 
+    /**
+     * The pets owned by the user.
+     *
+     * @type {Pet[]}
+     */
     @OneToMany(
         () => Pet,
         (pet: Pet) => pet.user,
@@ -170,6 +262,11 @@ export class User extends BaseModel {
     @IsOptional()
     pets!: Pet[];
 
+    /**
+     * The reviews received by the user.
+     *
+     * @type {Review[]}
+     */
     @OneToMany(
         () => Review,
         (review: Review) => review.reviewed,
@@ -177,6 +274,11 @@ export class User extends BaseModel {
     @IsOptional()
     reviews_received!: Review[];
 
+    /**
+     * The reviews given by the user.
+     *
+     * @type {Review[]}
+     */
     @OneToMany(
         () => Review,
         (review: Review) => review.reviewer,
@@ -184,6 +286,11 @@ export class User extends BaseModel {
     @IsOptional()
     reviews_given!: Review[];
 
+    /**
+     * The bookings made by the user.
+     *
+     * @type {Booking[]}
+     */
     @OneToMany(
         () => Booking,
         (booking: Booking) => booking.owner,
@@ -192,6 +299,11 @@ export class User extends BaseModel {
     @IsOptional()
     bookings!: Booking[];
 
+    /**
+     * The sittings (bookings) where the user is the sitter.
+     *
+     * @type {Booking[]}
+     */
     @OneToMany(
         () => Booking,
         (Booking: Booking) => Booking.sitter
@@ -199,6 +311,9 @@ export class User extends BaseModel {
     @IsOptional()
     sittings!: Booking[];
 
+    /**
+     * Normalizes fields before insertion or update.
+     */
     @BeforeInsert()
     @BeforeUpdate()
     async normalize() {
@@ -210,28 +325,39 @@ export class User extends BaseModel {
             this.bank_account_number = this.bank_account_number.toLowerCase();
     }
 
+    /**
+     * Transforms fields after loading from the database.
+     */
     @AfterLoad()
     transform() {
         this.birthday = new Date(this.birthday);
         this.fee = this.fee ? Number(this.fee) : null;
     }
 
+    /**
+     * Validates the given password against the stored hashed password.
+     *
+     * @param enteredPassword The password to validate.
+     * @returns A boolean indicating if the password matches.
+     */
     async validatePassword(enteredPassword: string) {
         if (this.password)
             return bcrypt.compare(enteredPassword, this.password);
     }
 
+    /**
+     * Encrypts the user's password using bcrypt.
+     */
     async encryptPassword() {
         if (this.password)
             this.password = await bcrypt.hash(this.password, 10);
     }
 
-    dateToString() {
-        return (
-            this.birthday.getFullYear() + '-' + this.birthday.getMonth() + '-' + this.birthday.getDay()
-        );
-    }
-
+    /**
+     * Gets a minimal representation of the user's information.
+     *
+     * @returns An object with minimal user information.
+     */
     getMinimalInfo() {
         let obj = {
             id: this.id,

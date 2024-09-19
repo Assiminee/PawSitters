@@ -15,8 +15,25 @@ import certificationRouter from "./certification.router";
 import {upload} from "./helperFunctions";
 
 const userRouter = Router();
+
+/**
+ * Middleware to normalize query parameters.
+ */
 userRouter.use(normalizeQueryParams);
 
+/**
+ * Route handler for retrieving users.
+ *
+ * - Uses `availabilityQuery` to handle query parameters related to user availability.
+ * - Uses `validateQuery` to validate query parameters.
+ * - Fetches users based on availability or general criteria using `UserController`.
+ * - Returns a 200 status code with the user data if successful.
+ * - Returns a 500 status code with the error if an internal server error occurs.
+ *
+ * @param {Request} req - The HTTP request object.
+ * @param {Response} res - The HTTP response object.
+ * @returns {Promise<void>}
+ */
 userRouter.get('/', availabilityQuery, validateQuery, async (req, res) => {
     try {
         const controller = new UserController();
@@ -32,6 +49,17 @@ userRouter.get('/', availabilityQuery, validateQuery, async (req, res) => {
     }
 });
 
+/**
+ * Route handler for retrieving a specific user by ID.
+ *
+ * - Uses `UserController` to get user data by `user_id`.
+ * - Returns a 200 status code with the user data if successful.
+ * - Returns a 500 status code with the error if an internal server error occurs.
+ *
+ * @param {Request<{ user_id: string }>} req - The HTTP request object containing `user_id` parameter.
+ * @param {Response} res - The HTTP response object.
+ * @returns {Promise<void>}
+ */
 userRouter.get('/:user_id', async (req, res) => {
     try {
         const user = await (new UserController()).getUser(req.params.user_id);
@@ -43,6 +71,20 @@ userRouter.get('/:user_id', async (req, res) => {
     }
 });
 
+/**
+ * Route handler for creating a new user or logging in.
+ *
+ * - Uses `ensureJsonContentType` to ensure the request has JSON content.
+ * - Uses `loginRegister` middleware to handle login and registration logic.
+ * - Validates request body with `validateBody`.
+ * - Creates a new user or logs in an existing user based on query parameters.
+ * - Returns a 201 status code with the newly created user data or a 200 status code for login.
+ * - Returns a 500 status code with the error if an internal server error occurs.
+ *
+ * @param {Request} req - The HTTP request object.
+ * @param {Response} res - The HTTP response object.
+ * @returns {Promise<void>}
+ */
 userRouter.post('/', ensureJsonContentType, loginRegister, async (req, res) => {
     try {
         const controller = new UserController();
@@ -62,6 +104,21 @@ userRouter.post('/', ensureJsonContentType, loginRegister, async (req, res) => {
     }
 });
 
+/**
+ * Route handler for uploading a user profile image.
+ *
+ * - Uses `upload.single('user_image')` middleware to handle file uploads.
+ * - Retrieves the user by `user_id` using `UserController`.
+ * - Removes the old image if it exists.
+ * - Saves the new image path and updates the user record.
+ * - Returns a 200 status code with updated user data if successful.
+ * - Returns a 400 status code if no file is uploaded or 404 if the user is not found.
+ * - Returns a 500 status code with the error if an internal server error occurs.
+ *
+ * @param {Request<{ user_id: string }, any, any, any, { user_image: Express.Multer.File }>} req - The HTTP request object with file data.
+ * @param {Response} res - The HTTP response object.
+ * @returns {Promise<void>}
+ */
 userRouter.post('/:user_id/image', upload.single('user_image'), async (req, res) => {
     try {
         const controller = new UserController();
@@ -92,6 +149,19 @@ userRouter.post('/:user_id/image', upload.single('user_image'), async (req, res)
     }
 });
 
+/**
+ * Route handler for updating user details.
+ *
+ * - Uses `ensureJsonContentType` to ensure the request has JSON content.
+ * - Validates request body with `validateBody`.
+ * - Updates user details using `UserController`.
+ * - Returns a 200 status code with the updated user data if successful.
+ * - Returns a 500 status code with the error if an internal server error occurs.
+ *
+ * @param {Request<{ user_id: string }, any, any>} req - The HTTP request object containing `user_id` and request body.
+ * @param {Response} res - The HTTP response object.
+ * @returns {Promise<void>}
+ */
 userRouter.put('/:user_id', ensureJsonContentType, async (req, res) => {
     try {
         const user = await (new UserController()).editUser(
@@ -104,6 +174,17 @@ userRouter.put('/:user_id', ensureJsonContentType, async (req, res) => {
     }
 });
 
+/**
+ * Route handler for deleting a user.
+ *
+ * - Deletes the user by `user_id` using `UserController`.
+ * - Returns a 204 status code on successful deletion.
+ * - Returns a 500 status code with the error if an internal server error occurs.
+ *
+ * @param {Request<{ user_id: string }>} req - The HTTP request object containing `user_id` parameter.
+ * @param {Response} res - The HTTP response object.
+ * @returns {Promise<void>}
+ */
 userRouter.delete('/:user_id', async (req, res) => {
     try {
         await (new UserController()).deleteUser(req.params.user_id);
@@ -114,6 +195,14 @@ userRouter.delete('/:user_id', async (req, res) => {
     }
 });
 
+/**
+ * Mounts various routers for managing related resources under the user route.
+ *
+ * - `/user/:user_id/pets` will be handled by `petRouter`.
+ * - `/user/:user_id/address` will be handled by `addressRouter`.
+ * - `/user/:user_id/bookings` will be handled by `bookingRouter`.
+ * - `/user/:user_id/certifications` will be handled by `certificationRouter`.
+ */
 userRouter.use('/:user_id/pets', petRouter);
 userRouter.use('/:user_id/address', addressRouter);
 userRouter.use('/:user_id/bookings', bookingRouter);

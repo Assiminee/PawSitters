@@ -3,6 +3,7 @@ import {Role} from "./orm/entities/Role";
 import {Species} from "./orm/entities/Species";
 import {Breed} from "./orm/entities/Breed";
 
+// Function to create default roles in the database
 const createRoles = async () => {
     if (!AppDataSource.hasMetadata(Role))
         return;
@@ -20,6 +21,7 @@ const createRoles = async () => {
     }
 }
 
+// Function to create species and their associated breeds in the database
 const createSpecies = async () => {
     if (!AppDataSource.hasMetadata(Species) || !AppDataSource.hasMetadata(Breed))
         return;
@@ -59,7 +61,8 @@ const createSpecies = async () => {
     }
 }
 
+// Initialization function to create roles and species
 export const init = async () => {
-    await createRoles();
-    await createSpecies();
+    await createRoles(); // Call the function to create roles
+    await createSpecies(); // Call the function to create species
 }

@@ -12,6 +12,11 @@ import {
 } from "../custom_validation/BookingCustomValidation";
 import {Review} from "./Review";
 
+/**
+ * Enum representing possible booking statuses.
+ *
+ * @enum {string}
+ */
 export enum BookingStat {
     PENDING = "PENDING",
     ACCEPTED = "ACCEPTED",
@@ -21,8 +26,24 @@ export enum BookingStat {
     COMPLETED = "COMPLETED"
 }
 
+/**
+ * Entity representing a booking.
+ *
+ * Extends `BaseModel` to inherit common fields and methods.
+ *
+ * @extends BaseModel
+ */
 @Entity()
 export class Booking extends BaseModel {
+
+    /**
+     * The user who owns the booking.
+     *
+     * References the `User` entity with a many-to-one relationship.
+     * Ensures the user has the owner role and a bank account number.
+     *
+     * @type {User}
+     */
     @ManyToOne(
         () => User,
         (user: User) => user.bookings
@@ -33,6 +54,14 @@ export class Booking extends BaseModel {
     @Validate(HasBankAccountNumber)
     owner!: User;
 
+    /**
+     * The user who sits the pet in the booking.
+     *
+     * References the `User` entity with a many-to-one relationship.
+     * Ensures the user has the sitter role, the same city and country as the owner, a bank account number, and has specified a fee.
+     *
+     * @type {User}
+     */
     @ManyToOne(
         () => User,
         (user: User) => user.sittings
@@ -45,6 +74,14 @@ export class Booking extends BaseModel {
     @Validate(HasFeeSpecified)
     sitter!: User;
 
+    /**
+     * The payment associated with the booking.
+     *
+     * References the `Payment` entity with a one-to-one relationship.
+     *
+     * @type {Payment | null}
+     * @optional
+     */
     @OneToOne(
         () => Payment,
         (payment: Payment) => payment.booking,
@@ -54,6 +91,13 @@ export class Booking extends BaseModel {
     @IsOptional()
     payment?: Payment | null;
 
+    /**
+     * Reviews associated with the booking.
+     *
+     * References the `Review` entity with a one-to-many relationship.
+     *
+     * @type {Review[]}
+     */
     @OneToMany(
         () => Review,
         (review: Review) => review.booking,
@@ -61,6 +105,12 @@ export class Booking extends BaseModel {
     )
     reviews!: Review[];
 
+    /**
+     * Status of the booking, represented by the `BookingStat` enum.
+     *
+     * @type {string}
+     * @default BookingStat.PENDING
+     */
     @Column({
         type: "enum",
         enum: BookingStat,
@@ -71,17 +121,36 @@ export class Booking extends BaseModel {
     @IsEnum(BookingStat)
     status!: string;
 
+    /**
+     * Start date of the booking.
+     *
+     * @type {Date}
+     */
     @Column({type: "date", update: false})
     @IsNotEmpty({message: "Must specify a start date"})
     @IsDate()
     start_date!: Date;
 
+    /**
+     * End date of the booking.
+     *
+     * @type {Date}
+     * @validate IsValidInterval
+     */
     @Column({type: "date", update: false})
     @IsNotEmpty({message: "Must specify an end date"})
     @IsDate()
     @Validate(IsValidInterval)
     end_date!: Date;
 
+    /**
+     * Pets associated with the booking.
+     *
+     * References the `Pet` entity with a many-to-many relationship.
+     * Ensures that at least one pet is associated with the booking.
+     *
+     * @type {Pet[]}
+     */
     @ManyToMany(() => Pet, (pet : Pet) => pet.bookings)
     @JoinTable({
         name: 'pet_bookings',
@@ -91,6 +160,9 @@ export class Booking extends BaseModel {
     @ArrayNotEmpty({ message: 'A booking must involve at least one pet' })
     pets!: Pet[];
 
+    /**
+     * Converts date fields to `Date` objects after loading from the database.
+     */
     @AfterLoad()
     transform() {
         this.start_date = new Date(this.start_date);
