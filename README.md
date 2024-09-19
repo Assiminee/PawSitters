@@ -1,4 +1,24 @@
 # PawSitters
+
+## Introduction
+
+PawSitters is a comprehensive pet sitting and walking platform designed to connect pet owners with trusted and reliable pet sitters and walkers. The platform facilitates seamless interactions between users, allowing pet owners to book services and manage their pet care needs, while pet sitters can offer their services and manage bookings.
+
+Key features of PawSitters include:
+
+- **User Management**: Distinct roles for pet owners and service providers.
+- **Booking System**: Easy booking and management of pet sitting and walking services.
+- **Pet Profiles**: Detailed profiles for pets including their breed, age, and health information.
+- **User Reviews**: Feedback system to rate and review services.
+
+Developed using Node.js with Express.js for the backend, React.js and TypeScript for the frontend, and MySQL for database management, PawSitters is built to offer a reliable and user-friendly experience. The project also incorporates modern DevOps practices using Docker, Nginx, and Puppet for deployment and management.
+
+### Link to deployed API 
+  - [www.pawsitters.me/api/v1/users](pawsitters.me/api/v1/users)
+
+### Linkedin
+  - [Yasmine Znatni](https://www.linkedin.com/in/yasmine-znatni-94a397217/)
+
 ## Running the API
 To get the API up and running, follow these steps:
 1. Install Node.js Dependencies:
@@ -60,3 +80,6 @@ localhost:8081/api/v1/users/<user_id>/address
   - To create a user, follow the format of the data in ./backend/src/data.json
   - If any information is missing for the creation of any entity, the API will return valid json that will guide you to create the entity.
   - For the option ?login, the email and password of the user must be specified. Make sure to get the information from ./backend/src/data.json to test.
+
+## API Documentation
+  - A detailed documentation can be found in [here](https://github.com/Assiminee/PawSitters/blob/main/API%20Documentation.docx). Any and all endpoints are detailed in this file.
