@@ -15,6 +15,7 @@ Developed using Node.js with Express.js for the backend, React.js and TypeScript
 
 ### Link to deployed API 
   - [www.pawsitters.me/api/v1/users](pawsitters.me/api/v1/users)
+  - ![alt text](https://github.com/Assiminee/PawSitters/blob/main/Screenshot%202024-09-19%20022806.png)
 
 ### Linkedin
   - [Yasmine Znatni](https://www.linkedin.com/in/yasmine-znatni-94a397217/)
