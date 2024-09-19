@@ -1,4 +1,24 @@
 # PawSitters
+
+## Introduction
+
+PawSitters is a comprehensive pet sitting and walking platform designed to connect pet owners with trusted and reliable pet sitters and walkers. The platform facilitates seamless interactions between users, allowing pet owners to book services and manage their pet care needs, while pet sitters can offer their services and manage bookings.
+
+Key features of PawSitters include:
+
+- **User Management**: Distinct roles for pet owners and service providers.
+- **Booking System**: Easy booking and management of pet sitting and walking services.
+- **Pet Profiles**: Detailed profiles for pets including their breed, age, and health information.
+- **User Reviews**: Feedback system to rate and review services.
+
+Developed using Node.js with Express.js for the backend, React.js and TypeScript for the frontend, and MySQL for database management, PawSitters is built to offer a reliable and user-friendly experience. The project also incorporates modern DevOps practices using Docker, Nginx, and Puppet for deployment and management.
+
+### Link to deployed API 
+  - [www.pawsitters.me/api/v1/users](pawsitters.me/api/v1/users)
+
+### Linkedin
+  - [Yasmine Znatni](https://www.linkedin.com/in/yasmine-znatni-94a397217/)
+
 ## Running the API
 To get the API up and running, follow these steps:
 1. Install Node.js Dependencies:
