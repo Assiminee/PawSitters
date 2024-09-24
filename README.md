@@ -20,7 +20,7 @@ Developed using Node.js with Express.js for the backend, React.js and TypeScript
 ### Linkedin
   - [Yasmine Znatni](https://www.linkedin.com/in/yasmine-znatni-94a397217/)
 
-### [Blog post](http://www.pawsitters.me)
+### [Blog post](http://www.pawsitters.me/blog_post)
   
 
 ## Running the API
